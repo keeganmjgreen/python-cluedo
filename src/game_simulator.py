@@ -204,7 +204,7 @@ def main(
     game_id: int = 0,
     artifacting: bool = True,
     reveal_extra_cards_first: bool = False,
-):
+) -> None:
     game_setup = set_up_game(
         player_types=player_types,
         observer_types=observer_types,

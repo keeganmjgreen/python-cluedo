@@ -332,12 +332,16 @@ class TabletopGameAssistant:
         ...
 
 
-def main(game_id: int = 0, artifacting: bool = True):
+def main(
+    game_id: int = 0, artifacting: bool = True, reveal_extra_cards_first: bool = False
+) -> None:
     print_logo()
     pause()
     _print("Initializing the Cluedo game assistant... ")
     tabletop_game_assistant = TabletopGameAssistant(
-        game_id=game_id, artifacting=artifacting
+        game_id=game_id,
+        artifacting=artifacting,
+        reveal_extra_cards_first=reveal_extra_cards_first,
     )
     _print("Running the Cluedo game assistant... ")
     _print("Give me information about your gameplay by answering my prompts. ", end="")
@@ -348,4 +352,4 @@ def main(game_id: int = 0, artifacting: bool = True):
 if __name__ == "__main__":
     CHAR_PRINT_SECONDS = 0.01
     print("\n" * 100)
-    main(game_id=0, artifacting=True)
+    main(game_id=0, artifacting=True, reveal_extra_cards_first=False)
