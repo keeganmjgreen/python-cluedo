@@ -292,7 +292,7 @@ class TabletopGameAssistant:
         result = self.observer._try_solving_crime()
         if result is not None:
             crime = result
-            _print("Cluedo Assistant has solved the case! ")
+            _print("The Cluedo game assistant has solved the case! ")
             _print(
                 f"The host was killed by {crime.character.capitalize()} with the "
                 f"{crime.weapon.capitalize()} in the {crime.room.capitalize()}. "
@@ -335,11 +335,11 @@ class TabletopGameAssistant:
 def main(game_id: int = 0, artifacting: bool = True):
     print_logo()
     pause()
-    _print("Initializing Cluedo Assistant... ")
+    _print("Initializing the Cluedo game assistant... ")
     tabletop_game_assistant = TabletopGameAssistant(
         game_id=game_id, artifacting=artifacting
     )
-    _print("Running Cluedo Assistant... ")
+    _print("Running the Cluedo game assistant... ")
     _print("Give me information about your gameplay by answering my prompts. ", end="")
     _print("I will tell you what the crime was as soon as I've isolated the solution. ")
     tabletop_game_assistant.run()

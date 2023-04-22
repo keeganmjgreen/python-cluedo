@@ -4,14 +4,14 @@
 ██║     ██║     ██║   ██║██╔══╝  ██║  ██║██║   ██║
 ╚██████╗███████╗╚██████╔╝███████╗██████╔╝╚██████╔╝
  ╚═════╝╚══════╝ ╚═════╝ ╚══════╝╚═════╝  ╚═════╝ 
-Initializing Cluedo Assistant... 
+Initializing the Cluedo game assistant... 
 Please provide the player names in turn order, beginning with the starting player. 
 Player 1 name: 0
 Player 2 name: 1
 Player 3 name (<Enter> if no player 3): 2
 Player 4 name (<Enter> if no player 4): 3
 Player 5 name (<Enter> if no player 5): 
-Running Cluedo Assistant... 
+Running the Cluedo game assistant... 
 Give me information about your gameplay by answering my prompts. I will tell you what the crime was as soon as I've isolated the solution. 
 It's 0's turn. 
 Who does 0 say killed the host? Enter character name: green
@@ -219,5 +219,5 @@ Who gave evidence that the suspect, weapon, or room was wrong?
 Look at the extra cards. 
 What are they? 
 Enter rumor card name: theater
-Cluedo Assistant has solved the case!
+The Cluedo game assistant has solved the case!
 The host was killed by Scarlet with the Poison in the Dining Room.
