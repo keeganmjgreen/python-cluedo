@@ -20,7 +20,7 @@ from src.common.cards import (
 from src.common.probabilities_artifact_manager import ProbabilitiesArtifactManager
 from src.common.utils import print_logo, sign
 
-CHAR_PRINT_SECONDS = 0.01
+CHAR_PRINT_SECONDS = 0
 MIN_N_PLAYERS = 2
 N_SAMPLES_FOR_PROBABILITY = 10
 
@@ -346,6 +346,6 @@ def main(game_id: int = 0, artifacting: bool = True):
 
 
 if __name__ == "__main__":
-    CHAR_PRINT_SECONDS = 0
+    CHAR_PRINT_SECONDS = 0.01
     print("\n" * 100)
     main(game_id=0, artifacting=True)
