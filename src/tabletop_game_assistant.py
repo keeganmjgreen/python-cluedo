@@ -20,8 +20,9 @@ from src.common.cards import (
 from src.common.probabilities_artifact_manager import ProbabilitiesArtifactManager
 from src.common.utils import print_logo, sign
 
-N_SAMPLES_FOR_PROBABILITY = 10
+CHAR_PRINT_SECONDS = 0.01
 MIN_N_PLAYERS = 2
+N_SAMPLES_FOR_PROBABILITY = 10
 
 
 def format_list(l: list, sep="and") -> str:
@@ -35,7 +36,7 @@ def pause(duration_seconds: float = 0.5) -> None:
 def _print(msg: str = "", end: str = "\n") -> None:
     for char in msg:
         print(char, end="")
-        sleep(0.01)
+        sleep(CHAR_PRINT_SECONDS)
     pause()
     print(end, end="")
     if end == "\n":
@@ -345,5 +346,6 @@ def main(game_id: int = 0, artifacting: bool = True):
 
 
 if __name__ == "__main__":
+    CHAR_PRINT_SECONDS = 0
     print("\n" * 100)
     main(game_id=0, artifacting=True)
