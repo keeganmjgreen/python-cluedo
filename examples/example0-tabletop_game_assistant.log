@@ -1,0 +1,223 @@
+ ██████╗██╗     ██╗   ██╗███████╗██████╗  ██████╗ 
+██╔════╝██║     ██║   ██║██╔════╝██╔══██╗██╔═══██╗
+██║     ██║     ██║   ██║█████╗  ██║  ██║██║   ██║
+██║     ██║     ██║   ██║██╔══╝  ██║  ██║██║   ██║
+╚██████╗███████╗╚██████╔╝███████╗██████╔╝╚██████╔╝
+ ╚═════╝╚══════╝ ╚═════╝ ╚══════╝╚═════╝  ╚═════╝ 
+Initializing Cluedo Assistant... 
+Please provide the player names in turn order, beginning with the starting player. 
+Player 1 name: 0
+Player 2 name: 1
+Player 3 name (<Enter> if no player 3): 2
+Player 4 name (<Enter> if no player 4): 3
+Player 5 name (<Enter> if no player 5): 
+Running Cluedo Assistant... 
+Give me information about your gameplay by answering my prompts. I will tell you what the crime was as soon as I've isolated the solution. 
+It's 0's turn. 
+Who does 0 say killed the host? Enter character name: green
+How does 0 say the crime was committed? Enter weapon name: poison
+Where does 0 say the murder took place? Enter room name: guest house
+Who gave evidence that the suspect, weapon, or room was wrong? 
+ - Enter player name: 2
+ - Enter player name: 1
+It's 1's turn. 
+Who does 1 say killed the host? Enter character name: white
+How does 1 say the crime was committed? Enter weapon name: knife
+Where does 1 say the murder took place? Enter room name: dining room
+Who gave evidence that the suspect, weapon, or room was wrong? 
+ - Enter player name: 0
+ - Enter player name: 3
+It's 2's turn. 
+Who does 2 say killed the host? Enter character name: peacock
+How does 2 say the crime was committed? Enter weapon name: dumbbell
+Where does 2 say the murder took place? Enter room name: hall
+Who gave evidence that the suspect, weapon, or room was wrong? 
+ - Enter player name: 1
+ - Enter player name: 0
+It's 3's turn. 
+Who does 3 say killed the host? Enter character name: plum
+How does 3 say the crime was committed? Enter weapon name: ax
+Where does 3 say the murder took place? Enter room name: observatory
+Who gave evidence that the suspect, weapon, or room was wrong? 
+ - Enter player name: 2
+ - Enter player name: 0
+It's 0's turn. 
+Who does 0 say killed the host? Enter character name: mustard
+How does 0 say the crime was committed? Enter weapon name: trophy
+Where does 0 say the murder took place? Enter room name: dining room
+Who gave evidence that the suspect, weapon, or room was wrong? 
+ - Enter player name: 3
+ - Enter player name: 1
+It's 1's turn. 
+Who does 1 say killed the host? Enter character name: green
+How does 1 say the crime was committed? Enter weapon name: poison
+Where does 1 say the murder took place? Enter room name: hall
+Who gave evidence that the suspect, weapon, or room was wrong? 
+ - Enter player name: 0
+ - Enter player name: 2
+It's 2's turn. 
+Who does 2 say killed the host? Enter character name: plum
+How does 2 say the crime was committed? Enter weapon name: rope
+Where does 2 say the murder took place? Enter room name: spa
+Who gave evidence that the suspect, weapon, or room was wrong? 
+ - Enter player name: 1
+ - Enter player name: 3
+It's 3's turn. 
+Who does 3 say killed the host? Enter character name: scarlet
+How does 3 say the crime was committed? Enter weapon name: poison
+Where does 3 say the murder took place? Enter room name: dining room
+Who gave evidence that the suspect, weapon, or room was wrong? 
+ - Enter player name: 
+You've indicated that no players answered the guess. 
+It's 0's turn. 
+Who does 0 say killed the host? Enter character name: plum
+How does 0 say the crime was committed? Enter weapon name: bat
+Where does 0 say the murder took place? Enter room name: theater
+Who gave evidence that the suspect, weapon, or room was wrong? 
+ - Enter player name: 2
+ - Enter player name: 1
+It's 1's turn. 
+Who does 1 say killed the host? Enter character name: scarlet
+How does 1 say the crime was committed? Enter weapon name: poison
+Where does 1 say the murder took place? Enter room name: living room
+Who gave evidence that the suspect, weapon, or room was wrong? 
+ - Enter player name: 3
+ - Enter player name: 
+It's 2's turn. 
+Who does 2 say killed the host? Enter character name: scarlet
+How does 2 say the crime was committed? Enter weapon name: knife
+Where does 2 say the murder took place? Enter room name: dining room
+Who gave evidence that the suspect, weapon, or room was wrong? 
+ - Enter player name: 3
+ - Enter player name: 
+It's 3's turn. 
+Who does 3 say killed the host? Enter character name: plum
+How does 3 say the crime was committed? Enter weapon name: bat
+Where does 3 say the murder took place? Enter room name: theater
+Who gave evidence that the suspect, weapon, or room was wrong? 
+ - Enter player name: 2
+ - Enter player name: 1
+It's 0's turn. 
+Who does 0 say killed the host? Enter character name: plum
+How does 0 say the crime was committed? Enter weapon name: rope
+Where does 0 say the murder took place? Enter room name: dining room
+Who gave evidence that the suspect, weapon, or room was wrong? 
+ - Enter player name: 3
+ - Enter player name: 1
+It's 1's turn. 
+Who does 1 say killed the host? Enter character name: peacock
+How does 1 say the crime was committed? Enter weapon name: poison
+Where does 1 say the murder took place? Enter room name: dining room
+Who gave evidence that the suspect, weapon, or room was wrong? 
+ - Enter player name: 0 
+ - Enter player name: 
+It's 2's turn. 
+Who does 2 say killed the host? Enter character name: peacock
+How does 2 say the crime was committed? Enter weapon name: pistol
+Where does 2 say the murder took place? Enter room name: dining room
+Who gave evidence that the suspect, weapon, or room was wrong? 
+ - Enter player name: 0
+ - Enter player name: 
+It's 3's turn. 
+Who does 3 say killed the host? Enter character name: green
+How does 3 say the crime was committed? Enter weapon name: poison
+Where does 3 say the murder took place? Enter room name: kitchen
+Who gave evidence that the suspect, weapon, or room was wrong? 
+ - Enter player name: 2
+ - Enter player name: 0
+It's 0's turn. 
+Who does 0 say killed the host? Enter character name: scarlet
+How does 0 say the crime was committed? Enter weapon name: poison
+Where does 0 say the murder took place? Enter room name: dining room
+Who gave evidence that the suspect, weapon, or room was wrong? 
+ - Enter player name: 
+You've indicated that no players answered the guess. 
+It's 1's turn. 
+Who does 1 say killed the host? Enter character name: scarlet
+How does 1 say the crime was committed? Enter weapon name: candlestick
+Where does 1 say the murder took place? Enter room name: theater
+Who gave evidence that the suspect, weapon, or room was wrong? 
+ - Enter player name: 2
+ - Enter player name: 
+It's 2's turn. 
+Who does 2 say killed the host? Enter character name: scarlet
+How does 2 say the crime was committed? Enter weapon name: candlestick
+Where does 2 say the murder took place? Enter room name: dining room
+Who gave evidence that the suspect, weapon, or room was wrong? 
+ - Enter player name: 
+You've indicated that no players answered the guess. 
+It's 3's turn. 
+Who does 3 say killed the host? Enter character name: scarlet
+How does 3 say the crime was committed? Enter weapon name: pistol
+Where does 3 say the murder took place? Enter room name: spa
+Who gave evidence that the suspect, weapon, or room was wrong? 
+ - Enter player name: 2
+ - Enter player name: 1
+It's 0's turn. 
+Who does 0 say killed the host? Enter character name: green
+How does 0 say the crime was committed? Enter weapon name: poison
+Where does 0 say the murder took place? Enter room name: theater
+Who gave evidence that the suspect, weapon, or room was wrong? 
+ - Enter player name: 2
+ - Enter player name: 
+It's 1's turn. 
+Who does 1 say killed the host? Enter character name: white
+How does 1 say the crime was committed? Enter weapon name: bat
+Where does 1 say the murder took place? Enter room name: theater
+Who gave evidence that the suspect, weapon, or room was wrong? 
+ - Enter player name: 0
+ - Enter player name: 2
+It's 2's turn. 
+Who does 2 say killed the host? Enter character name: mustard
+How does 2 say the crime was committed? Enter weapon name: bat
+Where does 2 say the murder took place? Enter room name: kitchen
+Who gave evidence that the suspect, weapon, or room was wrong? 
+ - Enter player name: 0
+ - Enter player name: 3
+It's 3's turn. 
+Who does 3 say killed the host? Enter character name: white
+How does 3 say the crime was committed? Enter weapon name: candlestick
+Where does 3 say the murder took place? Enter room name: dining room
+Who gave evidence that the suspect, weapon, or room was wrong? 
+ - Enter player name: 2
+ - Enter player name: 0
+It's 0's turn. 
+Who does 0 say killed the host? Enter character name: white
+How does 0 say the crime was committed? Enter weapon name: rope
+Where does 0 say the murder took place? Enter room name: spa
+Who gave evidence that the suspect, weapon, or room was wrong? 
+ - Enter player name: 3
+ - Enter player name: 1
+It's 1's turn. 
+Who does 1 say killed the host? Enter character name: green
+How does 1 say the crime was committed? Enter weapon name: dumbbell
+Where does 1 say the murder took place? Enter room name: living room
+Who gave evidence that the suspect, weapon, or room was wrong? 
+ - Enter player name: 3
+ - Enter player name: 2
+It's 2's turn. 
+Who does 2 say killed the host? Enter character name: peacock
+How does 2 say the crime was committed? Enter weapon name: ax
+Where does 2 say the murder took place? Enter room name: hall
+Who gave evidence that the suspect, weapon, or room was wrong? 
+ - Enter player name: 0
+ - Enter player name: 
+It's 3's turn. 
+Who does 3 say killed the host? Enter character name: plum
+How does 3 say the crime was committed? Enter weapon name: rope
+Where does 3 say the murder took place? Enter room name: guest house
+Who gave evidence that the suspect, weapon, or room was wrong? 
+ - Enter player name: 1
+ - Enter player name: 
+It's 0's turn. 
+Who does 0 say killed the host? Enter character name: peacock
+How does 0 say the crime was committed? Enter weapon name: rope
+Where does 0 say the murder took place? Enter room name: theater
+Who gave evidence that the suspect, weapon, or room was wrong? 
+ - Enter player name: 3
+ - Enter player name: 
+Look at the extra cards. 
+What are they? 
+Enter rumor card name: theater
+Cluedo Assistant has solved the case!
+The host was killed by Scarlet with the Poison in the Dining Room.

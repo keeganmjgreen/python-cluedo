@@ -1,0 +1,12 @@
+name: python-cluedo
+dependencies:
+  - python
+  - pip
+  - pip:
+      - black
+      - dash
+      - numpy
+      - pandas
+      - plotly
+      - python-sat[pblib,aiger]
+      - scipy
