@@ -332,7 +332,6 @@ class TabletopGameAssistant:
 
 
 def main(game_id: int = 0, artifacting: bool = True):
-    print("\n" * 100)
     print_logo()
     pause()
     _print("Initializing Cluedo Assistant... ")
@@ -346,4 +345,5 @@ def main(game_id: int = 0, artifacting: bool = True):
 
 
 if __name__ == "__main__":
+    print("\n" * 100)
     main(game_id=0, artifacting=True)
