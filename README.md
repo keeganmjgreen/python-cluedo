@@ -4,7 +4,7 @@ Except this is a game; the name of the game is Cluedo, and you are indeed being 
 
 # This is `python-cluedo` 🕵️
 
-The `python-cluedo` suite is software for the 70-year-old board game Cluedo (Clue in North America). It is written in Python (because why the heck else would its name start with "Py") and it includes the following components:
+The `python-cluedo` suite is software for the 70-year-old board game Cluedo (Clue in North America). The Python implementation includes the following components:
 
 1. The powerful Cluedo bot.
 2. The Cluedo game simulator.
@@ -51,11 +51,15 @@ With you as its eyes, ears, and hands, the Cluedo game assistant is your brain. 
 
 - game board
 
-# Installation
-
 ...
 
 # Getting started
+
+## [Up and running in ten seconds](https://colab.research.google.com/github/keeganmjgreen/python-cluedo/blob/main/python_cluedo.ipynb)
+
+You can use the Cluedo game simulator or Cluedo game assistant *right now* by following [this link](https://colab.research.google.com/github/keeganmjgreen/python-cluedo/blob/main/python_cluedo.ipynb) to a Python notebook in Google Colaboratory, a free online Python runtime, and following the simple instructions therein. Note that you need to be signed into a Google account to use Colaboratory.
+
+# Installation
 
 ...
 
