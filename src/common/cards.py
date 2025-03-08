@@ -31,7 +31,6 @@ ROOM_NAMES = [
     "spa",
     "guest house",
 ]
-RUMOR_NAMES = CHARACTER_NAMES + WEAPON_NAMES + ROOM_NAMES
 
 
 class RumorCard:

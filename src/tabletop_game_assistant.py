@@ -8,7 +8,6 @@ from src.common.cards import (
     CHARACTER_NAMES,
     N_CASE_FILE_CARDS,
     ROOM_NAMES,
-    RUMOR_NAMES,
     RUMORS,
     WEAPON_NAMES,
     Character,
@@ -306,7 +305,7 @@ class TabletopGameAssistant:
             "character": CHARACTER_NAMES,
             "weapon": WEAPON_NAMES,
             "room": ROOM_NAMES,
-            "rumor card": RUMOR_NAMES,
+            "rumor card": [*CHARACTER_NAMES, *WEAPON_NAMES, *ROOM_NAMES],
             "player": self.player_names,
         }
         item_names = item_names_lookup[type_of_item]
