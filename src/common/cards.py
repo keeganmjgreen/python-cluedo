@@ -33,41 +33,27 @@ ROOM_NAMES = [
 ]
 
 
+@dataclasses.dataclass
 class RumorCard:
+    name: str
+
+    def __str__(self) -> str:
+        return f"{self.__class__.__name__}: {self.name.title()}"
+
+    def __hash__(self) -> int:
+        return hash(self.name)
+
+
+class Room(RumorCard):
     pass
 
 
-@dataclasses.dataclass
-class Room(RumorCard):
-    name: str
-
-    def __str__(self) -> str:
-        return f"Room: {self.name.title()}"
-
-    def __hash__(self) -> int:
-        return hash(self.name)
-
-
-@dataclasses.dataclass
 class Weapon(RumorCard):
-    name: str
-
-    def __str__(self) -> str:
-        return f"Weapon: {self.name.title()}"
-
-    def __hash__(self) -> int:
-        return hash(self.name)
+    pass
 
 
-@dataclasses.dataclass
 class Character(RumorCard):
-    name: str
-
-    def __str__(self) -> str:
-        return f"Character: {self.name.title()}"
-
-    def __hash__(self) -> int:
-        return hash(self.name)
+    pass
 
 
 RUMOR_TYPES = [Character, Weapon, Room]
