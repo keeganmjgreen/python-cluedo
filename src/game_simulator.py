@@ -80,8 +80,8 @@ def run_turn(
 def run_game(
     game_setup: GameSetup,
     game_id: int,
-    artifacting: bool = True,
-    reveal_extra_cards_first: bool = False,
+    artifacting: bool,
+    reveal_extra_cards_first: bool,
 ):
     agents = game_setup.agents
     agent_indices = list(agents.keys())
@@ -159,7 +159,7 @@ def run_game(
 
 
 def set_up_game(
-    player_types: list[type[BasePlayer]], observer_types: list[type[BaseObserver]] = []
+    player_types: list[type[BasePlayer]], observer_types: list[type[BaseObserver]]
 ) -> GameSetup:
     character_deck = shuffled(CHARACTERS)
     weapon_deck = shuffled(WEAPONS)
@@ -197,11 +197,11 @@ def set_up_game(
 
 
 def main(
-    player_types: list[type[BasePlayer]] = [SmartBotPlayer] * 4,
-    observer_types: list[type[BaseObserver]] = [SmartBotObserver],
-    game_id: int = 0,
-    artifacting: bool = True,
-    reveal_extra_cards_first: bool = False,
+    player_types: list[type[BasePlayer]],
+    observer_types: list[type[BaseObserver]],
+    game_id: int,
+    artifacting: bool,
+    reveal_extra_cards_first: bool,
 ) -> None:
     game_setup = set_up_game(
         player_types=player_types,
