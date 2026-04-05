@@ -3,7 +3,11 @@
         "editor.defaultFormatter": "charliermarsh.ruff"
     },
     "cSpell.words": [
-        "Cluedo"
+        "aiger",
+        "Cluedo",
+        "numpy",
+        "pblib",
+        "plotly"
     ],
     "editor.codeActionsOnSave": {
         "source.fixAll": "explicit",
