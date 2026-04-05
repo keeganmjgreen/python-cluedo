@@ -9,4 +9,3 @@ dependencies:
       - pandas
       - plotly
       - python-sat[pblib,aiger]
-      - scipy

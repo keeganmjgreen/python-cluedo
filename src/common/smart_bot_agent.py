@@ -1,11 +1,8 @@
 import dataclasses
 import itertools
-from time import time
-from typing import Callable, Literal
+from typing import Literal
 
-import numpy as np
 import pandas as pd
-import scipy.optimize
 from pysat.card import CardEnc
 from pysat.formula import CNF, IDPool
 from pysat.solvers import Solver
@@ -197,42 +194,6 @@ class SmartBotObserver(BaseObserver):
             names=["player_index", "rumor_card"],
         )
         return all_variables, all_variable_indices, all_variables_multiindex
-
-    def _equations_to_truths_func(
-        self,
-        equations: list[ProbabilityEquation],
-        all_variables: list[ProbabilityVariable],
-    ) -> Callable:
-        def truths_func(x: np.ndarray) -> float:
-            # TODO: Speed-up objective function evaluation.
-            start_time = time()
-            probability_values = pd.Series(
-                x, index=all_variables, name="probability_value"
-            )
-            return_val = [
-                eq.lhs.evaluate(probability_values=probability_values[eq.lhs.variables])
-                - eq.rhs
-                for eq in equations
-            ]
-            print(x)
-            print(return_val)
-            print(f"truths_func eval time: {(time() - start_time):.1} s")
-            return return_val
-
-        return truths_func
-
-    def _solve_truths_func(self, x0_scalar: float = 0.5):
-        # TODO: Specify Jacobian?
-        equations = self._game_log_to_truth_equations()
-        all_variables, _, _ = self._get_all_variables()
-        truths_func = self._equations_to_truths_func(
-            equations=equations, all_variables=all_variables
-        )
-        x0 = pd.Series(x0_scalar, index=all_variables).to_numpy()
-        x = scipy.optimize.least_squares(
-            fun=truths_func, x0=x0, bounds=(0, 1), verbose=2
-        )
-        return pd.Series(x, index=all_variables)
 
     def _equations_to_cnf_clauses(
         self,
