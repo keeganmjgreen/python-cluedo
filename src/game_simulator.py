@@ -6,7 +6,13 @@ from typing import Self
 from pydantic import model_validator
 from pydantic_settings import BaseSettings, CliApp, SettingsConfigDict
 
-from src.common.agent_utils import BaseAgent, BaseObserver, BasePlayer, UnknownRumor
+from src.common.agent_utils import (
+    AgentIndex,
+    BaseAgent,
+    BaseObserver,
+    BasePlayer,
+    UnknownRumor,
+)
 from src.common.cards import CHARACTERS, ROOMS, WEAPONS, Crime, RumorCard
 from src.common.consts import MIN_N_PLAYERS
 from src.common.probabilities_artifact_manager import ProbabilitiesArtifactManager
@@ -20,15 +26,15 @@ N_SAMPLES_FOR_PROBABILITY = 10
 @dataclasses.dataclass
 class GameSetup:
     crime: Crime
-    extra_cards: list[RumorCard]
-    agents: list[BaseAgent]
+    extra_cards: Sequence[RumorCard]
+    agents: dict[AgentIndex, BaseAgent]
 
 
 def run_turn(
     turn_index: int,
-    agents: list[BaseAgent],
-    current_player_index: int,
-):
+    agents: dict[AgentIndex, BaseAgent],
+    current_player_index: AgentIndex,
+) -> None:
     print(f"Turn: {turn_index}.")
     agent_indices = list(agents.keys())
     player_indices = [
@@ -87,7 +93,7 @@ def run_turn(
 
 def run_game(
     game_setup: GameSetup, artifacting_id: int | None, reveal_extra_cards_first: bool
-):
+) -> None:
     agents = game_setup.agents
     agent_indices = list(agents.keys())
     player_indices = [
@@ -104,14 +110,15 @@ def run_game(
             agents[agent_index].shown_extra_cards(
                 turn_index=turn_index, rumor_cards=game_setup.extra_cards
             )
-    won_agent_indices = []
+    won_agent_indices: list[AgentIndex] = []
     while True:
         for current_player_index in player_indices:
             if artifacting_id is not None:
                 for agent_index in agent_indices:
-                    probabilities_ser = agents[
-                        agent_index
-                    ]._solve_truths_cnf_probabilities(
+                    agent = agents[agent_index]
+                    if not isinstance(agent, SmartBotObserver):
+                        continue
+                    probabilities_ser = agent.solve_truths_cnf_probabilities(
                         n_samples=N_SAMPLES_FOR_PROBABILITY
                     )
                     probabilities_artifact_mgr.append_probabilities_ser(
@@ -127,20 +134,22 @@ def run_game(
                     )
             turn_index += 1
             run_turn(turn_index, agents, current_player_index)
-            newly_won_agent_indices = []
+            newly_won_agent_indices: list[AgentIndex] = []
             for agent_index in agent_indices:
                 if agent_index in won_agent_indices:
                     continue
                 agent = agents[agent_index]
                 if n_extra_cards != 0 and not reveal_extra_cards_first:
-                    agent_must_see_extra_cards = agents[
-                        agent_index
-                    ]._must_see_extra_cards(turn_index=turn_index)
-                    if agent_must_see_extra_cards:
-                        agents[agent_index].shown_extra_cards(
-                            turn_index=turn_index, rumor_cards=game_setup.extra_cards
+                    if isinstance(agent, SmartBotObserver):
+                        agent_must_see_extra_cards = agent.must_see_extra_cards(
+                            turn_index=turn_index
                         )
-                result = agent._try_solving_crime()
+                        if agent_must_see_extra_cards:
+                            agents[agent_index].shown_extra_cards(
+                                turn_index=turn_index,
+                                rumor_cards=game_setup.extra_cards,
+                            )
+                result = agent.try_solving_crime()
                 if result is not None:
                     won_agent_indices.append(agent_index)
                     newly_won_agent_indices.append(agent_index)
@@ -181,18 +190,22 @@ def set_up_game(
     n_extra_cards = len(rumor_deck) % n_players
     extra_cards = [rumor_deck.pop() for _ in range(n_extra_cards)]
     agent_types = list(player_types) + list(observer_types)
-    agents = {}
+    agents: dict[AgentIndex, BaseAgent] = {}
     for agent_index, agent_type in enumerate(agent_types):
-        agent = agent_type(
-            agent_index=agent_index,
-            player_indices=list(range(n_players)),
-            n_cards_per_player=n_cards_per_player,
-            **(
-                {"rumor_cards": [rumor_deck.pop() for _ in range(n_cards_per_player)]}
-                if issubclass(agent_type, BasePlayer)
-                else {}
-            ),
-        )
+        player_indices = list(range(n_players))
+        if issubclass(agent_type, BasePlayer):
+            agent = agent_type(
+                agent_index=agent_index,
+                player_indices=player_indices,
+                n_cards_per_player=n_cards_per_player,
+                rumor_cards=[rumor_deck.pop() for _ in range(n_cards_per_player)],
+            )
+        else:
+            agent = agent_type(
+                agent_index=agent_index,
+                player_indices=player_indices,
+                n_cards_per_player=n_cards_per_player,
+            )
         agents[agent_index] = agent
     game_setup = GameSetup(
         crime=crime,

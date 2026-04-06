@@ -1,25 +1,27 @@
 import abc
 import dataclasses
+from collections.abc import Sequence
 from copy import deepcopy
+from typing import Literal
 
 from src.common.cards import RUMORS, Crime, RumorCard
+from src.common.consts import EXTRA_CARDS, ExtraCards
 
 CASE_FILE = "Case File"
-EXTRA_CARDS = "Extra Cards"
+
+type CaseFile = Literal["Case File"]
+
+AgentIndex = int
 
 
-@dataclasses.dataclass
-class UnknownRumor(RumorCard):
+class UnknownRumor:
     pass
 
 
 @dataclasses.dataclass
 class CardReveal:
-    other_player_index: int
+    other_player_index: AgentIndex | ExtraCards
     rumor_card: RumorCard | UnknownRumor | None
-
-
-AgentIndex = int
 
 
 @dataclasses.dataclass
@@ -32,7 +34,7 @@ class GameLogEntry:
 
 @dataclasses.dataclass
 class BaseAgent(abc.ABC):
-    agent_index: AgentIndex | None
+    agent_index: AgentIndex
     player_indices: list[AgentIndex]
     n_cards_per_player: int
 
@@ -42,7 +44,7 @@ class BaseAgent(abc.ABC):
     def add_game_log_entry(
         self,
         turn_index: int,
-        turn_player_index: int = None,
+        turn_player_index: AgentIndex = None,
         guess: Crime = None,
         card_reveals: list[CardReveal] = [],
     ) -> None:
@@ -51,13 +53,18 @@ class BaseAgent(abc.ABC):
         )
 
     def shown_card(
-        self, turn_index: int, other_player_index: int, rumor_card: RumorCard
+        self,
+        turn_index: int,
+        other_player_index: AgentIndex | ExtraCards,
+        rumor_card: RumorCard | UnknownRumor | None,
     ) -> None:
         self._game_log[turn_index].card_reveals.append(
             CardReveal(other_player_index, rumor_card)
         )
 
-    def shown_extra_cards(self, turn_index: int, rumor_cards: list[RumorCard]) -> None:
+    def shown_extra_cards(
+        self, turn_index: int, rumor_cards: Sequence[RumorCard]
+    ) -> None:
         for rumor_card in rumor_cards:
             self.shown_card(
                 turn_index=turn_index,
@@ -66,7 +73,7 @@ class BaseAgent(abc.ABC):
             )
 
     @abc.abstractmethod
-    def _try_solving_crime(self) -> Crime | None:
+    def try_solving_crime(self) -> Crime | None:
         pass
 
 
@@ -84,12 +91,12 @@ class BasePlayer(BaseAgent, abc.ABC):
         self._rumor_cards = rumor_cards
 
     @abc.abstractmethod
-    def make_guess(self) -> Crime:
-        pass
+    def make_guess(self, turn_index: int | None = None) -> Crime:
+        raise NotImplementedError
 
     @abc.abstractmethod
     def answer_guess(self, guess: Crime) -> RumorCard | None:
-        pass
+        raise NotImplementedError
 
 
 class NaivePlayer(BasePlayer):

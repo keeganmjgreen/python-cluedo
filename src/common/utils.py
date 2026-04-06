@@ -1,8 +1,10 @@
+from collections.abc import MutableSequence
 from copy import deepcopy
 from random import shuffle
+from typing import Any
 
 
-def shuffled(iterable):
+def shuffled[T: MutableSequence[Any]](iterable: T) -> T:
     iterable_copy = deepcopy(iterable)
     shuffle(iterable_copy)
     return iterable_copy

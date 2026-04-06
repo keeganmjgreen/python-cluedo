@@ -105,7 +105,7 @@ class TabletopGameAssistant:
         while True:
             for player_name in self.player_names:
                 if self.artifacting_id is not None:
-                    probabilities_ser = self.observer._solve_truths_cnf_probabilities(
+                    probabilities_ser = self.observer.solve_truths_cnf_probabilities(
                         n_samples=N_SAMPLES_FOR_PROBABILITY
                     )
                     self.probabilities_artifact_mgr.append_probabilities_ser(
@@ -118,7 +118,7 @@ class TabletopGameAssistant:
                 self.turn_index += 1
                 self._run_turn(current_player_name=player_name)
                 if self.n_extra_cards != 0 and not self.reveal_extra_cards_first:
-                    observer_must_see_extra_cards = self.observer._must_see_extra_cards(
+                    observer_must_see_extra_cards = self.observer.must_see_extra_cards(
                         turn_index=self.turn_index
                     )
                     if observer_must_see_extra_cards:
@@ -284,7 +284,7 @@ class TabletopGameAssistant:
             prev_direction = deepcopy(direction)
 
     def _try_solving_crime(self):
-        result = self.observer._try_solving_crime()
+        result = self.observer.try_solving_crime()
         if result is not None:
             crime = result
             _print("The Cluedo game assistant has solved the case! ")

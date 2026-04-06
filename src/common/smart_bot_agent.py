@@ -13,6 +13,7 @@ from src.common.agent_utils import (
     AgentIndex,
     BaseObserver,
     BasePlayer,
+    CaseFile,
     GameLogEntry,
     UnknownRumor,
 )
@@ -26,6 +27,7 @@ from src.common.cards import (
     Crime,
     RumorCard,
 )
+from src.common.consts import ExtraCards
 from src.common.maths import (
     EventsSymmetricDifference,
     EventsUnion,
@@ -47,7 +49,7 @@ GUESS_ANSWERING_STRATEGY_TYPE = Literal["first", "random"]
 
 @dataclasses.dataclass
 class PlayerHasCard(ProbabilityEvent):
-    player_index: AgentIndex | Literal["case-file", "extra-cards"]
+    player_index: AgentIndex | CaseFile | ExtraCards
     rumor_card: RumorCard
 
     def __str__(self):
@@ -77,10 +79,10 @@ class SmartBotObserver(BaseObserver):
         return (len(RUMORS) - N_CASE_FILE_CARDS) % n_players
 
     def _game_log_to_truth_equations(self) -> list[ProbabilityEquation]:
-        equations = []
+        equations: list[ProbabilityEquation] = []
         # GENERAL KNOWLEDGE OF THE GAME...
         # The case file contains exactly one character, weapon, and room:
-        for rumor_cards in [CHARACTERS, WEAPONS, ROOMS]:
+        for rumor_cards in (CHARACTERS, WEAPONS, ROOMS):
             equations.append(
                 ProbabilityEquation(
                     lhs=ProbabilityExpression(
@@ -121,7 +123,7 @@ class SmartBotObserver(BaseObserver):
         # PLAYER KNOWLEDGE ACCUMULATED DURING GAMEPLAY...
         for game_log_entry in self._game_log:
             for card_reveal in game_log_entry.card_reveals:
-                if card_reveal.rumor_card == UnknownRumor():
+                if isinstance(card_reveal.rumor_card, UnknownRumor):
                     assert game_log_entry.turn_player_index != self.agent_index
                     # If a player A (can be this player) shows another player B (cannot be this
                     #     player) a rumor card, then this player knows that player A has at
@@ -221,7 +223,7 @@ class SmartBotObserver(BaseObserver):
         n_lits = id_pool.top
         return clauses, n_lits
 
-    def _solve_truths_cnf_probabilities(self, n_samples: int = 10):
+    def solve_truths_cnf_probabilities(self, n_samples: int = 10):
         (
             all_variables,
             all_variable_indices,
@@ -269,7 +271,7 @@ class SmartBotObserver(BaseObserver):
         )
         return probabilities_ser
 
-    def _must_see_extra_cards(self, turn_index: int = None) -> bool:
+    def must_see_extra_cards(self, turn_index: int = None) -> bool:
         free_case_file_variables = self._free_case_file_variables_getter(turn_index)
         must_see_extra_cards = (
             0 < len(free_case_file_variables) - 1 <= self.n_extra_cards
@@ -323,7 +325,7 @@ class SmartBotObserver(BaseObserver):
         else:
             return None, free_case_file_variables
 
-    def _try_solving_crime(self) -> Crime | None:
+    def try_solving_crime(self) -> Crime | None:
         result, _ = self._solve_truths_cnf()
         if result is not None:
             solution_ser = result
@@ -355,7 +357,7 @@ class SmartBotPlayer(BasePlayer, SmartBotObserver):
             Crime(*x) for x in itertools.product(CHARACTERS, WEAPONS, ROOMS)
         ]
 
-    def make_guess(self, turn_index: int = None) -> Crime:
+    def make_guess(self, turn_index: int | None = None) -> Crime:
         if self.guess_making_strategy == "random":
             guess = Crime(
                 character=shuffled(CHARACTERS)[0],
