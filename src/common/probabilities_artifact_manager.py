@@ -1,6 +1,5 @@
 import os
 from pathlib import Path
-from typing import Union
 
 import pandas as pd
 
@@ -37,7 +36,7 @@ class ProbabilitiesArtifactManager:
             if df is not None:
                 self.df = df
 
-    def read_csv(self) -> Union[pd.DataFrame, None]:
+    def read_csv(self) -> pd.DataFrame | None:
         try:
             return pd.read_csv(self.csv_path)
         except FileNotFoundError:

@@ -3,18 +3,17 @@ from __future__ import annotations
 import abc
 import dataclasses
 import itertools
-from typing import List, Union
 
 import numpy as np
 import pandas as pd
 
-cnf_type = List[List[int]]
+cnf_type = list[list[int]]
 
 
 @dataclasses.dataclass
 class ProbabilityEvent:
     @property
-    def variables(self) -> List[ProbabilityVariable]:
+    def variables(self) -> list[ProbabilityVariable]:
         return [ProbabilityVariable(event=self)]
 
     def evaluate_probability(self, probability_values: pd.Series) -> float:
@@ -30,7 +29,7 @@ class ProbabilityEvent:
 
 class Variable(abc.ABC):
     @property
-    def variables(self) -> List[Variable]:
+    def variables(self) -> list[Variable]:
         return [self]
 
 
@@ -47,13 +46,13 @@ class ProbabilityVariable(Variable):
 
 @dataclasses.dataclass
 class MultiEvent(ProbabilityEvent):
-    events: List[ProbabilityEvent]
+    events: list[ProbabilityEvent]
 
     def __hash__(self) -> int:
         return hash(tuple(set(self.events)))
 
     @property
-    def variables(self) -> List[ProbabilityVariable]:
+    def variables(self) -> list[ProbabilityVariable]:
         variables = []
         for event in self.events:
             variables.extend(event.variables)
@@ -162,7 +161,7 @@ class EventsUnion(MultiEvent):
 
 class Expression(abc.ABC):
     @property
-    def variables(self) -> List[Variable]:
+    def variables(self) -> list[Variable]:
         pass
 
     def evaluate(self, values) -> float:
@@ -179,7 +178,7 @@ class ProbabilityExpression(Expression):
         return hash(self.event)
 
     @property
-    def variables(self) -> List[ProbabilityVariable]:
+    def variables(self) -> list[ProbabilityVariable]:
         return self.event.variables
 
     def evaluate(self, probability_values: pd.Series) -> float:
@@ -194,14 +193,14 @@ class ProbabilityExpression(Expression):
 
 @dataclasses.dataclass
 class Equation:
-    lhs: Union[Expression, Variable, float, int]
-    rhs: Union[Expression, Variable, float, int]
+    lhs: Expression | Variable | float | int
+    rhs: Expression | Variable | float | int
 
     def __str__(self):
         return f"{self.lhs} = {self.rhs}"
 
     @property
-    def variables(self) -> List[Variable]:
+    def variables(self) -> list[Variable]:
         variables = []
         if hasattr(self.lhs, "variables"):
             variables.extend(self.lhs.variables)

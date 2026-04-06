@@ -1,5 +1,3 @@
-from typing import Union
-
 from src.common.agent_utils import BasePlayer
 from src.common.cards import (
     CHARACTER_NAMES,
@@ -25,7 +23,7 @@ class UserPlayer(BasePlayer):
         )
         return guess
 
-    def answer_guess(self, guess: Crime) -> Union[RumorCard, None]:
+    def answer_guess(self, guess: Crime) -> RumorCard | None:
         rumor_options = set(guess) & set(self._rumor_cards)
         if len(rumor_options) == 0:
             return None

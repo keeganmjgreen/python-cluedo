@@ -1,7 +1,6 @@
 import abc
 import dataclasses
 from copy import deepcopy
-from typing import List, Union
 
 from src.common.cards import RUMORS, Crime, RumorCard
 
@@ -17,7 +16,7 @@ class UnknownRumor(RumorCard):
 @dataclasses.dataclass
 class CardReveal:
     other_player_index: int
-    rumor_card: Union[None, RumorCard, UnknownRumor]
+    rumor_card: RumorCard | UnknownRumor | None
 
 
 agent_index_type = int
@@ -28,24 +27,24 @@ class GameLogEntry:
     turn_index: int
     turn_player_index: agent_index_type
     guess: Crime
-    card_reveals: List[CardReveal]
+    card_reveals: list[CardReveal]
 
 
 @dataclasses.dataclass
 class BaseAgent(abc.ABC):
-    agent_index: Union[agent_index_type, None]
-    player_indices: List[agent_index_type]
+    agent_index: agent_index_type | None
+    player_indices: list[agent_index_type]
     n_cards_per_player: int
 
     def __post_init__(self):
-        self._game_log: List[GameLogEntry] = []
+        self._game_log: list[GameLogEntry] = []
 
     def add_game_log_entry(
         self,
         turn_index: int,
         turn_player_index: int = None,
         guess: Crime = None,
-        card_reveals: List[CardReveal] = [],
+        card_reveals: list[CardReveal] = [],
     ) -> None:
         self._game_log.append(
             GameLogEntry(turn_index, turn_player_index, guess, card_reveals)
@@ -58,7 +57,7 @@ class BaseAgent(abc.ABC):
             CardReveal(other_player_index, rumor_card)
         )
 
-    def shown_extra_cards(self, turn_index: int, rumor_cards: List[RumorCard]) -> None:
+    def shown_extra_cards(self, turn_index: int, rumor_cards: list[RumorCard]) -> None:
         for rumor_card in rumor_cards:
             self.shown_card(
                 turn_index=turn_index,
@@ -67,7 +66,7 @@ class BaseAgent(abc.ABC):
             )
 
     @abc.abstractmethod
-    def _try_solving_crime(self) -> Union[None, Crime]:
+    def _try_solving_crime(self) -> Crime | None:
         pass
 
 
@@ -78,7 +77,7 @@ class BaseObserver(BaseAgent, abc.ABC):
 class BasePlayer(BaseAgent, abc.ABC):
     def __init__(
         self,
-        rumor_cards: List[RumorCard],
+        rumor_cards: list[RumorCard],
         **kwargs,
     ):
         super().__init__(**kwargs)
@@ -89,7 +88,7 @@ class BasePlayer(BaseAgent, abc.ABC):
         pass
 
     @abc.abstractmethod
-    def answer_guess(self, guess: Crime) -> Union[RumorCard, None]:
+    def answer_guess(self, guess: Crime) -> RumorCard | None:
         pass
 
 

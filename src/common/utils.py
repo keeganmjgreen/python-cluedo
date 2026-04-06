@@ -1,6 +1,5 @@
 from copy import deepcopy
 from random import shuffle
-from typing import Union
 
 
 def shuffled(iterable):
@@ -9,7 +8,7 @@ def shuffled(iterable):
     return iterable_copy
 
 
-def sign(x: Union[int, float]):
+def sign(x: int | float):
     return +1 if x > 0 else -1 if x < 0 else 0
 
 

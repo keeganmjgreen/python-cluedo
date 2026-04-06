@@ -1,9 +1,8 @@
 from copy import deepcopy
 from time import sleep
-from typing import List, Literal
+from typing import Literal
 
 from src.common.agent_utils import UnknownRumor
-from src.common.smart_bot_agent import SmartBotObserver, UnsolvableError
 from src.common.cards import (
     CHARACTER_NAMES,
     N_CASE_FILE_CARDS,
@@ -17,6 +16,7 @@ from src.common.cards import (
     Weapon,
 )
 from src.common.probabilities_artifact_manager import ProbabilitiesArtifactManager
+from src.common.smart_bot_agent import SmartBotObserver
 from src.common.utils import print_logo, sign
 
 CHAR_PRINT_SECONDS = 0
@@ -69,7 +69,7 @@ class TabletopGameAssistant:
         self.turn_index = 0
 
     @staticmethod
-    def _get_human_player_names() -> List[str]:
+    def _get_human_player_names() -> list[str]:
         _print(
             "Please provide the player names in turn order, beginning with the starting player. "
         )
@@ -131,7 +131,7 @@ class TabletopGameAssistant:
                             rumor_cards=self._get_extra_cards(),
                         )
 
-    def _get_extra_cards(self) -> List[RumorCard]:
+    def _get_extra_cards(self) -> list[RumorCard]:
         _print("Look at the extra cards. ")
         _print("What are they? ")
         extra_cards = []
@@ -327,8 +327,7 @@ class TabletopGameAssistant:
 
         return item_name.lower()
 
-    def _get_other_player_names(self, current_player_name: str) -> List[str]:
-        ...
+    def _get_other_player_names(self, current_player_name: str) -> list[str]: ...
 
 
 def main(

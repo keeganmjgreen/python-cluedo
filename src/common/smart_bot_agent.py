@@ -1,7 +1,7 @@
 import dataclasses
 import itertools
 from time import time
-from typing import Callable, List, Literal, Tuple, Union
+from typing import Callable, Literal
 
 import numpy as np
 import pandas as pd
@@ -50,7 +50,7 @@ GUESS_ANSWERING_STRATEGY_TYPE = Literal["first", "random"]
 
 @dataclasses.dataclass
 class PlayerHasCard(ProbabilityEvent):
-    player_index: Union[agent_index_type, Literal["case-file"], Literal["extra-cards"]]
+    player_index: agent_index_type | Literal["case-file", "extra-cards"]
     rumor_card: RumorCard
 
     def __str__(self):
@@ -65,8 +65,8 @@ class UnsolvableError(Exception):
 
 
 class SmartBotObserver(BaseObserver):
-    rumor_cards: List[RumorCard] = []
-    _game_log: List[GameLogEntry]
+    rumor_cards: list[RumorCard] = []
+    _game_log: list[GameLogEntry]
 
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
@@ -79,7 +79,7 @@ class SmartBotObserver(BaseObserver):
         n_players = len(self.player_indices)
         return (len(RUMORS) - N_CASE_FILE_CARDS) % n_players
 
-    def _game_log_to_truth_equations(self) -> List[ProbabilityEquation]:
+    def _game_log_to_truth_equations(self) -> list[ProbabilityEquation]:
         equations = []
         # GENERAL KNOWLEDGE OF THE GAME...
         # The case file contains exactly one character, weapon, and room:
@@ -181,7 +181,7 @@ class SmartBotObserver(BaseObserver):
 
     def _get_all_variables(
         self,
-    ) -> Tuple[List[ProbabilityVariable], pd.Series, pd.MultiIndex]:
+    ) -> tuple[list[ProbabilityVariable], pd.Series, pd.MultiIndex]:
         all_variables = [
             ProbabilityVariable(event=PlayerHasCard(player_index=pi, rumor_card=rc))
             for pi in self.player_indices + [CASE_FILE] + [EXTRA_CARDS]
@@ -200,8 +200,8 @@ class SmartBotObserver(BaseObserver):
 
     def _equations_to_truths_func(
         self,
-        equations: List[ProbabilityEquation],
-        all_variables: List[ProbabilityVariable],
+        equations: list[ProbabilityEquation],
+        all_variables: list[ProbabilityVariable],
     ) -> Callable:
         def truths_func(x: np.ndarray) -> float:
             # TODO: Speed-up objective function evaluation.
@@ -236,10 +236,10 @@ class SmartBotObserver(BaseObserver):
 
     def _equations_to_cnf_clauses(
         self,
-        equations: List[ProbabilityEquation],
+        equations: list[ProbabilityEquation],
         all_variable_indices: pd.Series,
         all_variables_multiindex: pd.MultiIndex,
-    ) -> List[List[int]]:
+    ) -> list[list[int]]:
         clauses = []
         for eq in equations:
             clauses.extend(eq.to_cnf(variable_indices=all_variable_indices))
@@ -286,7 +286,7 @@ class SmartBotObserver(BaseObserver):
             )
             with Solver(bootstrap_with=cnf) as solver:
                 solver.solve()
-                solution: List[int] = solver.get_model()
+                solution: list[int] = solver.get_model()
             random2orig_lit_index_mapping = {
                 v: k for k, v in orig2random_lit_index_mapping.items()
             }
@@ -315,18 +315,18 @@ class SmartBotObserver(BaseObserver):
         )
         return must_see_extra_cards
 
-    def _free_case_file_variables_getter(self, turn_index: Union[int, None] = None):
+    def _free_case_file_variables_getter(self, turn_index: int | None = None):
         if turn_index in self._free_case_file_variables_ser.index:
             free_case_file_variables = self._free_case_file_variables_ser[turn_index]
         else:
             _, free_case_file_variables = self._solve_truths_cnf()
             if turn_index is not None:
-                self._free_case_file_variables_ser.loc[
-                    turn_index
-                ] = free_case_file_variables
+                self._free_case_file_variables_ser.loc[turn_index] = (
+                    free_case_file_variables
+                )
         return free_case_file_variables
 
-    def _solve_truths_cnf(self) -> Tuple[Union[Crime, None], List[ProbabilityVariable]]:
+    def _solve_truths_cnf(self) -> tuple[Crime | None, list[ProbabilityVariable]]:
         (
             all_variables,
             all_variable_indices,
@@ -341,7 +341,7 @@ class SmartBotObserver(BaseObserver):
             solvable = solver.solve()
             if not solvable:
                 raise UnsolvableError
-            solution: List[int] = solver.get_model()
+            solution: list[int] = solver.get_model()
             free_case_file_variables = []
             for rumor_card in RUMORS:
                 case_file_variable = ProbabilityVariable(
@@ -362,7 +362,7 @@ class SmartBotObserver(BaseObserver):
         else:
             return None, free_case_file_variables
 
-    def _try_solving_crime(self) -> Union[None, Crime]:
+    def _try_solving_crime(self) -> Crime | None:
         result, _ = self._solve_truths_cnf()
         if result is not None:
             solution_ser = result
@@ -381,7 +381,7 @@ class SmartBotObserver(BaseObserver):
 class SmartBotPlayer(BasePlayer, SmartBotObserver):
     guess_making_strategy: GUESS_MAKING_STRATEGY_TYPE
     guess_answering_strategy: GUESS_ANSWERING_STRATEGY_TYPE
-    remaining_unique_guesses: List[Crime]
+    remaining_unique_guesses: list[Crime]
 
     def __init__(
         self,
@@ -428,14 +428,14 @@ class SmartBotPlayer(BasePlayer, SmartBotObserver):
             guess = Crime(*crime_cards.values())
         return guess
 
-    def answer_guess(self, guess: Crime) -> Union[RumorCard, None]:
+    def answer_guess(self, guess: Crime) -> RumorCard | None:
         for rumor_card in shuffled(self._rumor_cards):
             for rumor in guess:
                 if rumor_card == rumor:
                     return rumor_card
         return None
 
-    def _game_log_to_truth_equations(self) -> List[ProbabilityEquation]:
+    def _game_log_to_truth_equations(self) -> list[ProbabilityEquation]:
         equations = super()._game_log_to_truth_equations()
         # PLAYER KNOWLEDGE OF THE GAME INSTANCE...
         # This player owns their own rumor cards and only those rumor cards:

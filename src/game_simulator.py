@@ -1,11 +1,9 @@
 import dataclasses
-from typing import List, Type
 
 from src.common.agent_utils import BaseAgent, BaseObserver, BasePlayer, UnknownRumor
-from src.common.smart_bot_agent import SmartBotObserver, SmartBotPlayer
 from src.common.cards import CHARACTERS, ROOMS, WEAPONS, Crime, RumorCard
 from src.common.probabilities_artifact_manager import ProbabilitiesArtifactManager
-from src.common.user_player import UserPlayer
+from src.common.smart_bot_agent import SmartBotObserver, SmartBotPlayer
 from src.common.utils import shuffled
 
 N_SAMPLES_FOR_PROBABILITY = 10
@@ -14,13 +12,13 @@ N_SAMPLES_FOR_PROBABILITY = 10
 @dataclasses.dataclass
 class GameSetup:
     crime: Crime
-    extra_cards: List[RumorCard]
-    agents: List[BaseAgent]
+    extra_cards: list[RumorCard]
+    agents: list[BaseAgent]
 
 
 def run_turn(
     turn_index: int,
-    agents: List[BaseAgent],
+    agents: list[BaseAgent],
     current_player_index: int,
 ):
     print(f"Turn: {turn_index}.")
@@ -161,7 +159,7 @@ def run_game(
 
 
 def set_up_game(
-    player_types: List[Type[BasePlayer]], observer_types: List[Type[BaseObserver]] = []
+    player_types: list[type[BasePlayer]], observer_types: list[type[BaseObserver]] = []
 ) -> GameSetup:
     character_deck = shuffled(CHARACTERS)
     weapon_deck = shuffled(WEAPONS)
@@ -199,8 +197,8 @@ def set_up_game(
 
 
 def main(
-    player_types: List[Type[BasePlayer]] = [SmartBotPlayer] * 4,
-    observer_types: List[Type[BaseObserver]] = [SmartBotObserver],
+    player_types: list[type[BasePlayer]] = [SmartBotPlayer] * 4,
+    observer_types: list[type[BaseObserver]] = [SmartBotObserver],
     game_id: int = 0,
     artifacting: bool = True,
     reveal_extra_cards_first: bool = False,
