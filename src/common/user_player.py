@@ -1,5 +1,5 @@
-from src.common.agent_utils import BasePlayer
-from src.common.cards import (
+from common.agent_utils import BasePlayer
+from common.cards import (
     CHARACTER_NAMES,
     ROOM_NAMES,
     RUMOR_TYPES,

@@ -4,8 +4,8 @@ from collections.abc import Sequence
 from copy import deepcopy
 from typing import Literal
 
-from src.common.cards import RUMORS, Crime, RumorCard
-from src.common.consts import EXTRA_CARDS, ExtraCards
+from common.cards import RUMORS, Crime, RumorCard
+from common.consts import EXTRA_CARDS, ExtraCards
 
 CASE_FILE = "Case File"
 

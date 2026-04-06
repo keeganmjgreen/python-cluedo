@@ -6,19 +6,19 @@ from typing import Self
 from pydantic import model_validator
 from pydantic_settings import BaseSettings, CliApp, SettingsConfigDict
 
-from src.common.agent_utils import (
+from common.agent_utils import (
     AgentIndex,
     BaseAgent,
     BaseObserver,
     BasePlayer,
     UnknownRumor,
 )
-from src.common.cards import CHARACTERS, ROOMS, WEAPONS, Crime, RumorCard
-from src.common.consts import MIN_N_PLAYERS
-from src.common.probabilities_artifact_manager import ProbabilitiesArtifactManager
-from src.common.smart_bot_agent import SmartBotObserver, SmartBotPlayer
-from src.common.user_player import UserPlayer
-from src.common.utils import shuffled
+from common.cards import CHARACTERS, ROOMS, WEAPONS, Crime, RumorCard
+from common.consts import MIN_N_PLAYERS
+from common.probabilities_artifact_manager import ProbabilitiesArtifactManager
+from common.smart_bot_agent import SmartBotObserver, SmartBotPlayer
+from common.user_player import UserPlayer
+from common.utils import shuffled
 
 N_SAMPLES_FOR_PROBABILITY = 10
 

@@ -2,8 +2,8 @@ from copy import deepcopy
 from time import sleep
 from typing import Literal
 
-from src.common.agent_utils import UnknownRumor
-from src.common.cards import (
+from common.agent_utils import UnknownRumor
+from common.cards import (
     CHARACTER_NAMES,
     N_CASE_FILE_CARDS,
     ROOM_NAMES,
@@ -15,10 +15,10 @@ from src.common.cards import (
     RumorCard,
     Weapon,
 )
-from src.common.consts import MIN_N_PLAYERS
-from src.common.probabilities_artifact_manager import ProbabilitiesArtifactManager
-from src.common.smart_bot_agent import SmartBotObserver
-from src.common.utils import print_logo, sign
+from common.consts import MIN_N_PLAYERS
+from common.probabilities_artifact_manager import ProbabilitiesArtifactManager
+from common.smart_bot_agent import SmartBotObserver
+from common.utils import print_logo, sign
 
 CHAR_PRINT_SECONDS = 0
 N_SAMPLES_FOR_PROBABILITY = 10

@@ -1,8 +1,8 @@
 import plotly.express as px
 from dash import Dash, Input, Output, dcc, html
 
-from src.common.agent_utils import AgentIndex
-from src.common.probabilities_artifact_manager import ProbabilitiesArtifactManager
+from common.agent_utils import AgentIndex
+from common.probabilities_artifact_manager import ProbabilitiesArtifactManager
 
 app = Dash(__name__)
 

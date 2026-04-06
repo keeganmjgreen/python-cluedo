@@ -7,7 +7,7 @@ from pysat.card import CardEnc
 from pysat.formula import CNF, IDPool
 from pysat.solvers import Solver
 
-from src.common.agent_utils import (
+from common.agent_utils import (
     CASE_FILE,
     EXTRA_CARDS,
     AgentIndex,
@@ -17,7 +17,7 @@ from src.common.agent_utils import (
     GameLogEntry,
     UnknownRumor,
 )
-from src.common.cards import (
+from common.cards import (
     CHARACTERS,
     N_CASE_FILE_CARDS,
     ROOMS,
@@ -27,8 +27,8 @@ from src.common.cards import (
     Crime,
     RumorCard,
 )
-from src.common.consts import ExtraCards
-from src.common.maths import (
+from common.consts import ExtraCards
+from common.maths import (
     EventsSymmetricDifference,
     EventsUnion,
     ProbabilityEquation,
@@ -36,7 +36,7 @@ from src.common.maths import (
     ProbabilityExpression,
     ProbabilityVariable,
 )
-from src.common.utils import shuffled, sign
+from common.utils import shuffled, sign
 
 GUESS_MAKING_STRATEGY_TYPE = Literal[
     "random",  # Moderate performance.

@@ -3,7 +3,7 @@ from pathlib import Path
 
 import pandas as pd
 
-from src.common.agent_utils import AgentIndex
+from common.agent_utils import AgentIndex
 
 CSV_PATH = Path("tmp", "probabilities_data.csv")
 
