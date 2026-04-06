@@ -15,12 +15,12 @@ from src.common.cards import (
     RumorCard,
     Weapon,
 )
+from src.common.consts import MIN_N_PLAYERS
 from src.common.probabilities_artifact_manager import ProbabilitiesArtifactManager
 from src.common.smart_bot_agent import SmartBotObserver
 from src.common.utils import print_logo, sign
 
 CHAR_PRINT_SECONDS = 0
-MIN_N_PLAYERS = 2
 N_SAMPLES_FOR_PROBABILITY = 10
 
 

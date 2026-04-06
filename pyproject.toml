@@ -8,6 +8,7 @@ dependencies = [
     "numpy>=2.4.4,<3",
     "pandas>=3.0.2,<4",
     "plotly>=6.6.0,<7",
+    "pydantic-settings>=2.13.1",
     "python-sat[aiger,pblib]>=1.9.dev2,<2",
     "ruff>=0.15.9",
 ]

@@ -1,9 +1,17 @@
 import dataclasses
+import sys
+from collections.abc import Sequence
+from typing import Self
+
+from pydantic import model_validator
+from pydantic_settings import BaseSettings, CliApp, SettingsConfigDict
 
 from src.common.agent_utils import BaseAgent, BaseObserver, BasePlayer, UnknownRumor
 from src.common.cards import CHARACTERS, ROOMS, WEAPONS, Crime, RumorCard
+from src.common.consts import MIN_N_PLAYERS
 from src.common.probabilities_artifact_manager import ProbabilitiesArtifactManager
 from src.common.smart_bot_agent import SmartBotObserver, SmartBotPlayer
+from src.common.user_player import UserPlayer
 from src.common.utils import shuffled
 
 N_SAMPLES_FOR_PROBABILITY = 10
@@ -156,7 +164,8 @@ def run_game(
 
 
 def set_up_game(
-    player_types: list[type[BasePlayer]], observer_types: list[type[BaseObserver]]
+    player_types: Sequence[type[BasePlayer]],
+    observer_types: Sequence[type[BaseObserver]],
 ) -> GameSetup:
     character_deck = shuffled(CHARACTERS)
     weapon_deck = shuffled(WEAPONS)
@@ -171,7 +180,7 @@ def set_up_game(
     n_cards_per_player = len(rumor_deck) // n_players
     n_extra_cards = len(rumor_deck) % n_players
     extra_cards = [rumor_deck.pop() for _ in range(n_extra_cards)]
-    agent_types = player_types + observer_types
+    agent_types = list(player_types) + list(observer_types)
     agents = {}
     for agent_index, agent_type in enumerate(agent_types):
         agent = agent_type(
@@ -193,16 +202,13 @@ def set_up_game(
     return game_setup
 
 
-def main(
-    player_types: list[type[BasePlayer]],
-    observer_types: list[type[BaseObserver]],
-    artifacting_id: int | None,
-    reveal_extra_cards_first: bool,
+def game_simulator(
+    player_types: Sequence[type[BasePlayer]],
+    observer_types: Sequence[type[BaseObserver]] = (),
+    artifacting_id: int | None = None,
+    reveal_extra_cards_first: bool = False,
 ) -> None:
-    game_setup = set_up_game(
-        player_types=player_types,
-        observer_types=observer_types,
-    )
+    game_setup = set_up_game(player_types=player_types, observer_types=observer_types)
     run_game(
         game_setup=game_setup,
         artifacting_id=artifacting_id,
@@ -210,10 +216,38 @@ def main(
     )
 
 
-if __name__ == "__main__":
-    main(
-        player_types=([SmartBotPlayer] * 4),
-        observer_types=[SmartBotObserver],
-        artifacting_id=1,
-        reveal_extra_cards_first=False,
+def main() -> None:
+    cli_settings = _CliSettings.from_cli_args()
+    game_simulator(
+        player_types=(
+            [SmartBotPlayer] * cli_settings.n_bot_players
+            + [UserPlayer] * cli_settings.n_human_players
+        ),
+        observer_types=([SmartBotObserver] if cli_settings.include_observer else []),
+        artifacting_id=cli_settings.artifacting_id,
+        reveal_extra_cards_first=cli_settings.reveal_extra_cards_first,
     )
+
+
+class _CliSettings(BaseSettings):
+    model_config = SettingsConfigDict(cli_kebab_case=True, cli_implicit_flags=True)
+
+    n_bot_players: int = 0
+    n_human_players: int = 0
+    include_observer: bool = False
+    artifacting_id: int | None = None
+    reveal_extra_cards_first: bool = False
+
+    @model_validator(mode="after")
+    def check_n_total_players(self) -> Self:
+        if self.n_bot_players + self.n_human_players < MIN_N_PLAYERS:
+            raise ValueError(f"There must be at least {MIN_N_PLAYERS} players")
+        return self
+
+    @classmethod
+    def from_cli_args(cls) -> Self:
+        return CliApp.run(cls, cli_args=sys.argv[1:])
+
+
+if __name__ == "__main__":
+    main()

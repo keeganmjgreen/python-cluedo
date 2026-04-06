@@ -1,0 +1,1 @@
+MIN_N_PLAYERS = 2
