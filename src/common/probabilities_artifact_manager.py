@@ -10,7 +10,7 @@ CSV_PATH = Path("tmp", "probabilities_data.csv")
 
 class ProbabilitiesArtifactManager:
     fields = [
-        "game_id",
+        "artifacting_id",
         "agent_type",
         "agent_index",
         "turn_index",
@@ -52,30 +52,32 @@ class ProbabilitiesArtifactManager:
 
     def get_probabilities_ser(
         self,
-        game_id: int,
+        artifacting_id: int,
         agent_type: str,
         agent_index: agent_index_type,
         turn_index: int,
     ) -> pd.Series:
         probabilities_ser = (
-            self.df.set_index(["game_id", "agent_type", "agent_index", "turn_index"])
+            self.df.set_index(
+                ["artifacting_id", "agent_type", "agent_index", "turn_index"]
+            )
             .sort_index()
-            .loc[game_id, agent_type, agent_index, turn_index]
+            .loc[artifacting_id, agent_type, agent_index, turn_index]
             .set_index(["player_index", "rumor_card"])["approx_probability"]
         )
         return probabilities_ser
 
     def append_probabilities_ser(
         self,
-        game_id: int,
+        artifacting_id: int,
         agent_type: str,
         agent_index: agent_index_type,
         turn_index: int,
         probabilities_ser: pd.Series,
     ) -> None:
         append_df = probabilities_ser.reset_index()
-        append_df[["game_id", "agent_type", "agent_index", "turn_index"]] = (
-            game_id,
+        append_df[["artifacting_id", "agent_type", "agent_index", "turn_index"]] = (
+            artifacting_id,
             agent_type,
             agent_index,
             turn_index,

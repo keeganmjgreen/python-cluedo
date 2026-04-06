@@ -1,4 +1,4 @@
-game_id,agent_type,agent_index,turn_index,player_index,rumor_card,approx_probability
+artifacting_id,agent_type,agent_index,turn_index,player_index,rumor_card,approx_probability
 1,Player,0,0,0,Character: Mustard,0
 1,Player,0,0,0,Character: Plum,0
 1,Player,0,0,0,Character: Green,0

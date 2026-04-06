@@ -7,7 +7,7 @@ from src.common.probabilities_artifact_manager import ProbabilitiesArtifactManag
 app = Dash(__name__)
 
 field_titles = {
-    "game_id": "Game ID",
+    "artifacting_id": "Artifacting ID",
     "agent_type": "Agent Type",
     "agent_index": "Agent Index",
     "turn_index": "Turn Index",
@@ -41,27 +41,27 @@ app.layout = html.Div(
 
 
 @app.callback(
-    Output("game_id-dropdown-selection", "options"),
-    Input("game_id-dropdown-selection", "search_value"),
+    Output("artifacting_id-dropdown-selection", "options"),
+    Input("artifacting_id-dropdown-selection", "search_value"),
 )
 def update_options(search_value):
     probabilities_artifact_mgr = ProbabilitiesArtifactManager()
     df = probabilities_artifact_mgr.df
-    return ["(Latest)"] + df["game_id"].unique().tolist()
+    return ["(Latest)"] + df["artifacting_id"].unique().tolist()
 
 
 @app.callback(
     Output("agent_type-dropdown-selection", "options"),
     Input("agent_type-dropdown-selection", "search_value"),
-    Input("game_id-dropdown-selection", "value"),
+    Input("artifacting_id-dropdown-selection", "value"),
 )
-def update_options(search_value, game_id):
+def update_options(search_value, artifacting_id):
     probabilities_artifact_mgr = ProbabilitiesArtifactManager()
     df = probabilities_artifact_mgr.df
-    if game_id == "(Latest)":
+    if artifacting_id == "(Latest)":
         return ["(Latest)"]
     else:
-        return ["(Latest)"] + df[df["game_id"] == game_id][
+        return ["(Latest)"] + df[df["artifacting_id"] == artifacting_id][
             "agent_type"
         ].unique().tolist()
 
@@ -69,29 +69,29 @@ def update_options(search_value, game_id):
 @app.callback(
     Output("agent_index-dropdown-selection", "options"),
     Input("agent_index-dropdown-selection", "search_value"),
-    Input("game_id-dropdown-selection", "value"),
+    Input("artifacting_id-dropdown-selection", "value"),
     Input("agent_type-dropdown-selection", "value"),
 )
-def update_options(search_value, game_id, agent_type):
+def update_options(search_value, artifacting_id, agent_type):
     probabilities_artifact_mgr = ProbabilitiesArtifactManager()
     df = probabilities_artifact_mgr.df
     return ["(Latest)"] + df[
-        (df["game_id"] == game_id) & (df["agent_type"] == agent_type)
+        (df["artifacting_id"] == artifacting_id) & (df["agent_type"] == agent_type)
     ]["agent_index"].unique().tolist()
 
 
 @app.callback(
     Output("turn_index-dropdown-selection", "options"),
     Input("agent_index-dropdown-selection", "search_value"),
-    Input("game_id-dropdown-selection", "value"),
+    Input("artifacting_id-dropdown-selection", "value"),
     Input("agent_type-dropdown-selection", "value"),
     Input("agent_index-dropdown-selection", "value"),
 )
-def update_options(search_value, game_id, agent_type, agent_index):
+def update_options(search_value, artifacting_id, agent_type, agent_index):
     probabilities_artifact_mgr = ProbabilitiesArtifactManager()
     df = probabilities_artifact_mgr.df
     return ["(Latest)"] + df[
-        (df["game_id"] == game_id)
+        (df["artifacting_id"] == artifacting_id)
         & (df["agent_type"] == agent_type)
         & (df["agent_index"] == agent_index)
     ]["turn_index"].unique().tolist()
@@ -109,16 +109,16 @@ def update_options(search_value, game_id, agent_type, agent_index):
 )
 def update_probabilities_heatmap(
     n: int,
-    game_id: int,
+    artifacting_id: int,
     agent_type: str,
     agent_index: agent_index_type,
     turn_index: int,
 ):
     probabilities_artifact_mgr = ProbabilitiesArtifactManager()
     df = probabilities_artifact_mgr.df
-    if game_id == "(Latest)":
-        game_id = df["game_id"].iloc[-1]
-    df = df[df["game_id"] == game_id]
+    if artifacting_id == "(Latest)":
+        artifacting_id = df["artifacting_id"].iloc[-1]
+    df = df[df["artifacting_id"] == artifacting_id]
     if agent_type == "(Latest)":
         agent_type = df["agent_type"].iloc[-1]
     df = df[df["agent_type"] == agent_type]
@@ -128,7 +128,7 @@ def update_probabilities_heatmap(
     if turn_index == "(Latest)":
         turn_index = df["turn_index"].iloc[-1]
     probabilities_ser = probabilities_artifact_mgr.get_probabilities_ser(
-        game_id,
+        artifacting_id,
         agent_type=agent_type,
         agent_index=agent_index,
         turn_index=turn_index,
@@ -138,7 +138,7 @@ def update_probabilities_heatmap(
     fig.update_xaxes(type="category")
     fig.update_yaxes(type="category")
     fig.update_layout(
-        title=f"Approximate Probabilities | Game ID: {game_id:2.0f}, Turn Index: {turn_index:2.0f}, Agent Index: {agent_index}, Agent Type: {agent_type}"
+        title=f"Approximate Probabilities | Artifacting ID: {artifacting_id:2.0f}, Turn Index: {turn_index:2.0f}, Agent Index: {agent_index}, Agent Type: {agent_type}"
     )
     return fig
 

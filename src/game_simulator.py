@@ -78,10 +78,7 @@ def run_turn(
 
 
 def run_game(
-    game_setup: GameSetup,
-    game_id: int,
-    artifacting: bool,
-    reveal_extra_cards_first: bool,
+    game_setup: GameSetup, artifacting_id: int | None, reveal_extra_cards_first: bool
 ):
     agents = game_setup.agents
     agent_indices = list(agents.keys())
@@ -89,7 +86,7 @@ def run_game(
         index for index, player in agents.items() if isinstance(player, BasePlayer)
     ]
     observer_indices = [index for index in agents.keys() if index not in player_indices]
-    if artifacting:
+    if artifacting_id is not None:
         probabilities_artifact_mgr = ProbabilitiesArtifactManager(start_over=False)
     n_extra_cards = len(game_setup.extra_cards)
     turn_index = 0
@@ -102,7 +99,7 @@ def run_game(
     won_agent_indices = []
     while True:
         for current_player_index in player_indices:
-            if artifacting:
+            if artifacting_id is not None:
                 for agent_index in agent_indices:
                     probabilities_ser = agents[
                         agent_index
@@ -110,7 +107,7 @@ def run_game(
                         n_samples=N_SAMPLES_FOR_PROBABILITY
                     )
                     probabilities_artifact_mgr.append_probabilities_ser(
-                        game_id=game_id,
+                        artifacting_id=artifacting_id,
                         agent_type=(
                             "Player"
                             if isinstance(agents[agent_index], BasePlayer)
@@ -199,8 +196,7 @@ def set_up_game(
 def main(
     player_types: list[type[BasePlayer]],
     observer_types: list[type[BaseObserver]],
-    game_id: int,
-    artifacting: bool,
+    artifacting_id: int | None,
     reveal_extra_cards_first: bool,
 ) -> None:
     game_setup = set_up_game(
@@ -209,8 +205,7 @@ def main(
     )
     run_game(
         game_setup=game_setup,
-        game_id=game_id,
-        artifacting=artifacting,
+        artifacting_id=artifacting_id,
         reveal_extra_cards_first=reveal_extra_cards_first,
     )
 
@@ -219,7 +214,6 @@ if __name__ == "__main__":
     main(
         player_types=([SmartBotPlayer] * 4),
         observer_types=[SmartBotObserver],
-        game_id=1,
-        artifacting=True,
+        artifacting_id=1,
         reveal_extra_cards_first=False,
     )

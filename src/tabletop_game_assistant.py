@@ -44,15 +44,11 @@ def _print(msg: str = "", end: str = "\n") -> None:
 
 class TabletopGameAssistant:
     def __init__(
-        self,
-        game_id: int,
-        artifacting: bool = True,
-        reveal_extra_cards_first: bool = False,
+        self, artifacting_id: int | None, reveal_extra_cards_first: bool = False
     ):
-        self.game_id = game_id
-        self.artifacting = artifacting
+        self.artifacting_id = artifacting_id
         self.reveal_extra_cards_first = reveal_extra_cards_first
-        if self.artifacting:
+        if self.artifacting_id is not None:
             self.probabilities_artifact_mgr = ProbabilitiesArtifactManager(
                 start_over=False
             )
@@ -108,12 +104,12 @@ class TabletopGameAssistant:
             )
         while True:
             for player_name in self.player_names:
-                if self.artifacting:
+                if self.artifacting_id is not None:
                     probabilities_ser = self.observer._solve_truths_cnf_probabilities(
                         n_samples=N_SAMPLES_FOR_PROBABILITY
                     )
                     self.probabilities_artifact_mgr.append_probabilities_ser(
-                        game_id=self.game_id,
+                        artifacting_id=self.artifacting_id,
                         agent_type="Observer",
                         agent_index=self.observer.agent_index,
                         turn_index=self.turn_index,
@@ -330,16 +326,12 @@ class TabletopGameAssistant:
     def _get_other_player_names(self, current_player_name: str) -> list[str]: ...
 
 
-def main(
-    game_id: int = 0, artifacting: bool = True, reveal_extra_cards_first: bool = False
-) -> None:
+def main(artifacting_id: int = 0, reveal_extra_cards_first: bool = False) -> None:
     print_logo()
     pause()
     _print("Initializing the Cluedo game assistant... ")
     tabletop_game_assistant = TabletopGameAssistant(
-        game_id=game_id,
-        artifacting=artifacting,
-        reveal_extra_cards_first=reveal_extra_cards_first,
+        artifacting_id=artifacting_id, reveal_extra_cards_first=reveal_extra_cards_first
     )
     _print("Running the Cluedo game assistant... ")
     _print("Give me information about your gameplay by answering my prompts. ", end="")
@@ -350,4 +342,4 @@ def main(
 if __name__ == "__main__":
     CHAR_PRINT_SECONDS = 0.01
     print("\n" * 100)
-    main(game_id=0, artifacting=True, reveal_extra_cards_first=False)
+    main(artifacting_id=0, artifacting=True, reveal_extra_cards_first=False)
