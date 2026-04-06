@@ -10,11 +10,11 @@ from pysat.solvers import Solver
 from src.common.agent_utils import (
     CASE_FILE,
     EXTRA_CARDS,
+    AgentIndex,
     BaseObserver,
     BasePlayer,
     GameLogEntry,
     UnknownRumor,
-    agent_index_type,
 )
 from src.common.cards import (
     CHARACTERS,
@@ -47,7 +47,7 @@ GUESS_ANSWERING_STRATEGY_TYPE = Literal["first", "random"]
 
 @dataclasses.dataclass
 class PlayerHasCard(ProbabilityEvent):
-    player_index: agent_index_type | Literal["case-file", "extra-cards"]
+    player_index: AgentIndex | Literal["case-file", "extra-cards"]
     rumor_card: RumorCard
 
     def __str__(self):

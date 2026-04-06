@@ -19,21 +19,21 @@ class CardReveal:
     rumor_card: RumorCard | UnknownRumor | None
 
 
-agent_index_type = int
+AgentIndex = int
 
 
 @dataclasses.dataclass
 class GameLogEntry:
     turn_index: int
-    turn_player_index: agent_index_type
+    turn_player_index: AgentIndex
     guess: Crime
     card_reveals: list[CardReveal]
 
 
 @dataclasses.dataclass
 class BaseAgent(abc.ABC):
-    agent_index: agent_index_type | None
-    player_indices: list[agent_index_type]
+    agent_index: AgentIndex | None
+    player_indices: list[AgentIndex]
     n_cards_per_player: int
 
     def __post_init__(self):

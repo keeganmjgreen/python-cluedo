@@ -1,7 +1,7 @@
 import plotly.express as px
 from dash import Dash, Input, Output, dcc, html
 
-from src.common.agent_utils import agent_index_type
+from src.common.agent_utils import AgentIndex
 from src.common.probabilities_artifact_manager import ProbabilitiesArtifactManager
 
 app = Dash(__name__)
@@ -111,7 +111,7 @@ def update_probabilities_heatmap(
     n: int,
     artifacting_id: int,
     agent_type: str,
-    agent_index: agent_index_type,
+    agent_index: AgentIndex,
     turn_index: int,
 ):
     probabilities_artifact_mgr = ProbabilitiesArtifactManager()

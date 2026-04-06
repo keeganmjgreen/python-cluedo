@@ -3,7 +3,7 @@ from pathlib import Path
 
 import pandas as pd
 
-from src.common.agent_utils import agent_index_type
+from src.common.agent_utils import AgentIndex
 
 CSV_PATH = Path("tmp", "probabilities_data.csv")
 
@@ -54,7 +54,7 @@ class ProbabilitiesArtifactManager:
         self,
         artifacting_id: int,
         agent_type: str,
-        agent_index: agent_index_type,
+        agent_index: AgentIndex,
         turn_index: int,
     ) -> pd.Series:
         probabilities_ser = (
@@ -71,7 +71,7 @@ class ProbabilitiesArtifactManager:
         self,
         artifacting_id: int,
         agent_type: str,
-        agent_index: agent_index_type,
+        agent_index: AgentIndex,
         turn_index: int,
         probabilities_ser: pd.Series,
     ) -> None:
