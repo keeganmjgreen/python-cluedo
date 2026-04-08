@@ -3,231 +3,109 @@ from __future__ import annotations
 import abc
 import dataclasses
 import itertools
+from collections.abc import Sequence
 
-import numpy as np
-import pandas as pd
+from common.agent_utils import AgentIndex, CaseFile
+from common.cards import RumorCard
+from common.consts import ExtraCards
 
-cnf_type = list[list[int]]
-
-
-@dataclasses.dataclass
-class ProbabilityEvent:
-    @property
-    def variables(self) -> list[ProbabilityVariable]:
-        return [ProbabilityVariable(event=self)]
-
-    def evaluate_probability(self, probability_values: pd.Series) -> float:
-        return probability_values[self.variables[0]]
-
-    def math_str(self):
-        return str(ProbabilityExpression(event=self))
-
-    def to_cnf(self, variable_indices: pd.Series, inverse: bool):
-        variable_index = variable_indices.loc[self.variables[0]]
-        return [[variable_index if not inverse else -variable_index]]
+type CNF = list[list[int]]
 
 
-class Variable(abc.ABC):
-    @property
-    def variables(self) -> list[Variable]:
-        return [self]
-
-
-@dataclasses.dataclass
-class ProbabilityVariable(Variable):
-    event: ProbabilityEvent
-
-    def __str__(self):
-        return f"P({self.event})"
-
-    def __hash__(self) -> int:
-        return hash(self.event)
-
-
-@dataclasses.dataclass
-class MultiEvent(ProbabilityEvent):
-    events: list[ProbabilityEvent]
-
-    def __hash__(self) -> int:
-        return hash(tuple(set(self.events)))
-
-    @property
-    def variables(self) -> list[ProbabilityVariable]:
-        variables = []
-        for event in self.events:
-            variables.extend(event.variables)
-        return variables
-
-    def evaluate_probability(self, probability_values: pd.Series) -> float:
+class BooleanStatement(abc.ABC):
+    @abc.abstractmethod
+    def __str__(self) -> str:
         raise NotImplementedError
 
-    def _pre_cnf_check(self, inverse: bool) -> None:
-        assert not inverse
-        assert all([not isinstance(e, MultiEvent) for e in self.events])
+    @abc.abstractmethod
+    def __hash__(self) -> int:
+        raise NotImplementedError
+
+    @abc.abstractmethod
+    def to_cnf(self, variable_indices: dict[CardIsInLocation, int]) -> CNF:
+        raise NotImplementedError
 
 
 @dataclasses.dataclass
-class EventsIntersection(MultiEvent):
-    # Note: Events are independent.
+class CardIsInLocation(BooleanStatement):
+    """A boolean variable representing whether the given `rumor_card` is in the given
+    `location`.
+    """
 
-    def __str__(self):
-        return " n ".join([f"({e})" for e in self.events])
+    rumor_card: RumorCard
+    location: AgentIndex | CaseFile | ExtraCards
+
+    def __str__(self) -> str:
+        return f"player {self.location} has {self.rumor_card.name} card"
 
     def __hash__(self) -> int:
-        return hash((super(), type(self).__name__))
+        return hash((self.location, self.rumor_card, type(self).__name__))
 
-    def evaluate_probability(self, probability_values: pd.Series) -> float:
-        return np.prod(
-            [
-                e.evaluate_probability(
-                    probability_values=probability_values[e.variables]
-                )
-                for e in self.events
-            ]
-        )
-
-    def math_str(self):
-        return " * ".join([f"({e.math_str()})" for e in self.events])
-
-    def to_cnf(self, variable_indices: pd.Series, inverse: bool):
-        super()._pre_cnf_check(inverse)
-        return [[variable_indices.loc[e.variables[0]]] for e in self.events]
+    def to_cnf(self, variable_indices: dict[CardIsInLocation, int]) -> CNF:
+        return [[variable_indices[self]]]
 
 
 @dataclasses.dataclass
-class EventsSymmetricDifference(MultiEvent):
-    # Note: Events are mutually exclusive.
+class Not(BooleanStatement):
+    operand: CardIsInLocation
 
-    def __str__(self):
-        return " ^ ".join([f"({e})" for e in self.events])
+    def __str__(self) -> str:
+        return f"¬({self.operand})"
+
+    def __hash__(self) -> int:
+        return hash((self.operand, type(self).__name__))
+
+    def to_cnf(self, variable_indices: dict[CardIsInLocation, int]) -> CNF:
+        return [[-variable_indices[self.operand]]]
+
+
+@dataclasses.dataclass
+class _Multi(BooleanStatement, abc.ABC):
+    operands: Sequence[CardIsInLocation]
+
+    @abc.abstractmethod
+    def __str__(self) -> str:
+        raise NotImplementedError
+
+    def __hash__(self) -> int:
+        return hash(tuple(set(self.operands)))
+
+
+@dataclasses.dataclass
+class And(_Multi):
+    def __str__(self) -> str:
+        return " ^ ".join([f"({e})" for e in self.operands])
 
     def __hash__(self) -> int:
         return hash((hash(super()), type(self).__name__))
 
-    def evaluate_probability(self, probability_values: pd.Series) -> float:
-        return np.sum(
-            [
-                e.evaluate_probability(
-                    probability_values=probability_values[e.variables]
-                )
-                for e in self.events
-            ]
-        )
+    def to_cnf(self, variable_indices: dict[CardIsInLocation, int]) -> CNF:
+        return [[variable_indices[e]] for e in self.operands]
 
-    def math_str(self):
-        return " + ".join([f"({e.math_str()})" for e in self.events])
 
-    def to_cnf(self, variable_indices: pd.Series, inverse: bool):
-        super()._pre_cnf_check(inverse)
+@dataclasses.dataclass
+class Or(_Multi):
+    def __str__(self) -> str:
+        return " v ".join([f"({e})" for e in self.operands])
+
+    def __hash__(self) -> int:
+        return hash((hash(super()), type(self).__name__))
+
+    def to_cnf(self, variable_indices: dict[CardIsInLocation, int]) -> CNF:
+        return [[variable_indices[e] for e in self.operands]]
+
+
+@dataclasses.dataclass
+class Xor(_Multi):
+    def __str__(self) -> str:
+        return " ⨁ ".join([f"({e})" for e in self.operands])
+
+    def __hash__(self) -> int:
+        return hash((hash(super()), type(self).__name__))
+
+    def to_cnf(self, variable_indices: dict[CardIsInLocation, int]) -> CNF:
         combinations = list(
-            itertools.combinations(
-                [-variable_indices.loc[e.variables[0]] for e in self.events], 2
-            )
+            itertools.combinations([-variable_indices[e] for e in self.operands], 2)
         )
         combinations = [list(c) for c in combinations]
-        return [
-            [variable_indices.loc[e.variables[0]] for e in self.events]
-        ] + combinations
-
-
-@dataclasses.dataclass
-class EventsUnion(MultiEvent):
-    # Note: Events are not mutually exclusive.
-
-    def __str__(self):
-        return " u ".join([f"({e})" for e in self.events])
-
-    def __hash__(self) -> int:
-        return hash((hash(super()), type(self).__name__))
-
-    def evaluate_probability(self, probability_values: pd.Series) -> float:
-        return 1 - np.prod(
-            [
-                1
-                - e.evaluate_probability(
-                    probability_values=probability_values[e.variables]
-                )
-                for e in self.events
-            ]
-        )
-
-    def math_str(self):
-        return f"1 - {' * '.join([f'(1 - ({e.math_str()}))' for e in self.events])}"
-
-    def to_cnf(self, variable_indices: pd.Series, inverse: bool):
-        super()._pre_cnf_check(inverse)
-        return [[variable_indices.loc[e.variables[0]] for e in self.events]]
-
-
-class Expression(abc.ABC):
-    @property
-    def variables(self) -> list[Variable]:
-        pass
-
-    def evaluate(self, values) -> float:
-        raise NotImplementedError
-
-
-@dataclasses.dataclass
-class ProbabilityExpression(Expression):
-    event: ProbabilityEvent
-
-    __str__ = ProbabilityVariable.__str__
-
-    def __hash__(self) -> int:
-        return hash(self.event)
-
-    @property
-    def variables(self) -> list[ProbabilityVariable]:
-        return self.event.variables
-
-    def evaluate(self, probability_values: pd.Series) -> float:
-        return self.event.evaluate_probability(probability_values=probability_values)
-
-    def math_str(self):
-        return self.event.math_str()
-
-    def to_cnf(self, variable_indices: pd.Series, inverse: bool):
-        return self.event.to_cnf(variable_indices=variable_indices, inverse=inverse)
-
-
-@dataclasses.dataclass
-class Equation:
-    lhs: Expression | Variable | float | int
-    rhs: Expression | Variable | float | int
-
-    def __str__(self):
-        return f"{self.lhs} = {self.rhs}"
-
-    @property
-    def variables(self) -> list[Variable]:
-        variables = []
-        if hasattr(self.lhs, "variables"):
-            variables.extend(self.lhs.variables)
-        if hasattr(self.rhs, "variables"):
-            variables.extend(self.rhs.variables)
-        return variables
-
-
-@dataclasses.dataclass
-class ProbabilityEquation(Equation):
-    lhs: ProbabilityExpression
-    rhs: float
-
-    def __hash__(self) -> int:
-        return hash((self.lhs, self.rhs))
-
-    def math_str(self):
-        return f"{self.lhs.math_str()} = {self.rhs}"
-
-    def to_cnf(self, variable_indices: pd.Series):
-        if self.rhs == 0:
-            return self.lhs.to_cnf(
-                variable_indices=variable_indices.loc[self.lhs.variables], inverse=True
-            )
-        elif self.rhs == 1:
-            return self.lhs.to_cnf(
-                variable_indices=variable_indices.loc[self.lhs.variables], inverse=False
-            )
-        else:
-            raise Exception
+        return [[variable_indices[e] for e in self.operands]] + combinations

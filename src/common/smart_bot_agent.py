@@ -1,4 +1,3 @@
-import dataclasses
 import itertools
 from typing import Literal
 
@@ -10,10 +9,8 @@ from pysat.solvers import Solver
 from common.agent_utils import (
     CASE_FILE,
     EXTRA_CARDS,
-    AgentIndex,
     BaseObserver,
     BasePlayer,
-    CaseFile,
     GameLogEntry,
     UnknownRumor,
 )
@@ -27,14 +24,12 @@ from common.cards import (
     Crime,
     RumorCard,
 )
-from common.consts import ExtraCards
 from common.maths import (
-    EventsSymmetricDifference,
-    EventsUnion,
-    ProbabilityEquation,
-    ProbabilityEvent,
-    ProbabilityExpression,
-    ProbabilityVariable,
+    BooleanStatement,
+    CardIsInLocation,
+    Not,
+    Or,
+    Xor,
 )
 from common.utils import shuffled, sign
 
@@ -45,18 +40,6 @@ GUESS_MAKING_STRATEGY_TYPE = Literal[
     "new-guess-rumor",  # Not yet implemented.
 ]
 GUESS_ANSWERING_STRATEGY_TYPE = Literal["first", "random"]
-
-
-@dataclasses.dataclass
-class PlayerHasCard(ProbabilityEvent):
-    player_index: AgentIndex | CaseFile | ExtraCards
-    rumor_card: RumorCard
-
-    def __str__(self):
-        return f"player {self.player_index} has {self.rumor_card.name} card"
-
-    def __hash__(self) -> int:
-        return hash((self.player_index, self.rumor_card))
 
 
 class UnsolvableError(Exception):
@@ -78,46 +61,28 @@ class SmartBotObserver(BaseObserver):
         n_players = len(self.player_indices)
         return (len(RUMORS) - N_CASE_FILE_CARDS) % n_players
 
-    def _game_log_to_truth_equations(self) -> list[ProbabilityEquation]:
-        equations: list[ProbabilityEquation] = []
+    def _game_log_to_truth_equations(self) -> list[BooleanStatement]:
+        equations: list[BooleanStatement] = []
         # GENERAL KNOWLEDGE OF THE GAME...
         # The case file contains exactly one character, weapon, and room:
         for rumor_cards in (CHARACTERS, WEAPONS, ROOMS):
             equations.append(
-                ProbabilityEquation(
-                    lhs=ProbabilityExpression(
-                        event=EventsSymmetricDifference(
-                            events=[
-                                PlayerHasCard(
-                                    player_index=CASE_FILE,
-                                    rumor_card=rc,
-                                )
-                                for rc in rumor_cards
-                            ]
-                        )
-                    ),
-                    rhs=1,
+                Xor(
+                    [
+                        CardIsInLocation(rumor_card, CASE_FILE)
+                        for rumor_card in rumor_cards
+                    ]
                 )
             )
-        # Each rumor card is owned by exactly one of the players including the case file and extra
-        #     cards:
+        # Each rumor card is owned by exactly one of the players including the case file
+        # and extra cards:
         for rumor_card in RUMORS:
             equations.append(
-                ProbabilityEquation(
-                    lhs=ProbabilityExpression(
-                        event=EventsSymmetricDifference(
-                            events=[
-                                PlayerHasCard(
-                                    player_index=pi,
-                                    rumor_card=rumor_card,
-                                )
-                                for pi in self.player_indices
-                                + [CASE_FILE]
-                                + [EXTRA_CARDS]
-                            ],
-                        )
-                    ),
-                    rhs=1,
+                Xor(
+                    [
+                        CardIsInLocation(rumor_card, loc)
+                        for loc in [*self.player_indices, CASE_FILE, EXTRA_CARDS]
+                    ],
                 )
             )
         # PLAYER KNOWLEDGE ACCUMULATED DURING GAMEPLAY...
@@ -125,54 +90,39 @@ class SmartBotObserver(BaseObserver):
             for card_reveal in game_log_entry.card_reveals:
                 if isinstance(card_reveal.rumor_card, UnknownRumor):
                     assert game_log_entry.turn_player_index != self.agent_index
-                    # If a player A (can be this player) shows another player B (cannot be this
-                    #     player) a rumor card, then this player knows that player A has at
-                    #     least one of the rumor cards in player B's guess:
+                    # If a player A (can be this player) shows another player B (cannot
+                    # be this player) a rumor card, then this player knows that player A
+                    # has at least one of the rumor cards in player B's guess:
                     # This player does not know that specific rumor card.
                     equations.append(
-                        ProbabilityEquation(
-                            lhs=ProbabilityExpression(
-                                event=EventsUnion(
-                                    [
-                                        PlayerHasCard(
-                                            player_index=card_reveal.other_player_index,
-                                            rumor_card=rc,
-                                        )
-                                        for rc in game_log_entry.guess
-                                    ]
+                        Or(
+                            [
+                                CardIsInLocation(
+                                    rumor_card, card_reveal.other_player_index
                                 )
-                            ),
-                            rhs=1,
+                                for rumor_card in game_log_entry.guess
+                            ]
                         )
                     )
                 elif card_reveal.rumor_card is not None:
-                    # If another player has shown this player a rumor card, then this player
-                    #     knows that that other player has that rumor card:
+                    # If another player has shown this player a rumor card, then this
+                    # player knows that that other player has that rumor card:
                     equations.append(
-                        ProbabilityEquation(
-                            lhs=ProbabilityExpression(
-                                event=PlayerHasCard(
-                                    player_index=card_reveal.other_player_index,
-                                    rumor_card=card_reveal.rumor_card,
-                                )
-                            ),
-                            rhs=1,
+                        CardIsInLocation(
+                            card_reveal.rumor_card, card_reveal.other_player_index
                         )
                     )
                 else:
                     for rumor_card in game_log_entry.guess:
-                        # If a player A (can be this player) does not show another player B (cannot
-                        #     be this player) a rumor card, then this player knows that player A
-                        #     does have any of the rumor cards in player B's guess:
+                        # If a player A (can be this player) does not show another
+                        # player B (cannot be this player) a rumor card, then this
+                        # player knows that player A does have any of the rumor cards in
+                        # player B's guess:
                         equations.append(
-                            ProbabilityEquation(
-                                lhs=ProbabilityExpression(
-                                    event=PlayerHasCard(
-                                        player_index=card_reveal.other_player_index,
-                                        rumor_card=rumor_card,
-                                    )
-                                ),
-                                rhs=0,
+                            Not(
+                                CardIsInLocation(
+                                    rumor_card, card_reveal.other_player_index
+                                )
                             )
                         )
         equations = list(set(equations))  # Remove duplicates.  # TODO: Preserve order?
@@ -180,9 +130,9 @@ class SmartBotObserver(BaseObserver):
 
     def _get_all_variables(
         self,
-    ) -> tuple[list[ProbabilityVariable], pd.Series, pd.MultiIndex]:
+    ) -> tuple[list[CardIsInLocation], pd.Series, pd.MultiIndex]:
         all_variables = [
-            ProbabilityVariable(event=PlayerHasCard(player_index=pi, rumor_card=rc))
+            CardIsInLocation(location=pi, rumor_card=rc)
             for pi in self.player_indices + [CASE_FILE] + [EXTRA_CARDS]
             for rc in RUMORS
         ]
@@ -192,20 +142,20 @@ class SmartBotObserver(BaseObserver):
             .set_index("variable")
         )["index"].astype(object) + 1
         all_variables_multiindex = pd.MultiIndex.from_tuples(
-            [(v.event.player_index, str(v.event.rumor_card)) for v in all_variables],
+            [(v.location, str(v.rumor_card)) for v in all_variables],
             names=["player_index", "rumor_card"],
         )
         return all_variables, all_variable_indices, all_variables_multiindex
 
     def _equations_to_cnf_clauses(
         self,
-        equations: list[ProbabilityEquation],
+        equations: list[BooleanStatement],
         all_variable_indices: pd.Series,
         all_variables_multiindex: pd.MultiIndex,
     ) -> list[list[int]]:
         clauses = []
         for eq in equations:
-            clauses.extend(eq.to_cnf(variable_indices=all_variable_indices))
+            clauses.extend(eq.to_cnf(variable_indices=all_variable_indices.to_dict()))
         id_pool = IDPool(start_from=1, occupied=[[1, len(all_variable_indices)]])
         for player_index in self.player_indices:
             clauses.extend(
@@ -289,7 +239,7 @@ class SmartBotObserver(BaseObserver):
                 )
         return free_case_file_variables
 
-    def _solve_truths_cnf(self) -> tuple[Crime | None, list[ProbabilityVariable]]:
+    def _solve_truths_cnf(self) -> tuple[Crime | None, list[CardIsInLocation]]:
         (
             all_variables,
             all_variable_indices,
@@ -307,8 +257,8 @@ class SmartBotObserver(BaseObserver):
             solution: list[int] = solver.get_model()
             free_case_file_variables = []
             for rumor_card in RUMORS:
-                case_file_variable = ProbabilityVariable(
-                    event=PlayerHasCard(player_index=CASE_FILE, rumor_card=rumor_card)
+                case_file_variable = CardIsInLocation(
+                    location=CASE_FILE, rumor_card=rumor_card
                 )
                 case_file_variable_index = all_variable_indices[case_file_variable]
                 if +case_file_variable_index in solution:
@@ -330,10 +280,10 @@ class SmartBotObserver(BaseObserver):
         if result is not None:
             solution_ser = result
             case_file_solution_ser = solution_ser[
-                [v for v in solution_ser.index if v.event.player_index == CASE_FILE]
+                [v for v in solution_ser.index if v.location == CASE_FILE]
             ]
             crime_cards = [
-                v.event.rumor_card
+                v.rumor_card
                 for v in case_file_solution_ser[case_file_solution_ser == 1].index
             ]
             return Crime(*crime_cards)
@@ -370,15 +320,12 @@ class SmartBotPlayer(BasePlayer, SmartBotObserver):
         ]:
             free_case_file_variables = self._free_case_file_variables_getter(turn_index)
             case_file_variables = [
-                ProbabilityVariable(
-                    event=PlayerHasCard(player_index=CASE_FILE, rumor_card=rc)
-                )
-                for rc in RUMORS
+                CardIsInLocation(location=CASE_FILE, rumor_card=rc) for rc in RUMORS
             ]
             _rumor_cards_getter = lambda case_file_vars: [
-                var.event.rumor_card
+                var.rumor_card
                 for var in case_file_vars
-                if type(var.event.rumor_card) == rumor_type
+                if type(var.rumor_card) == rumor_type
             ]
             crime_cards = {}
             for rumor_type in RUMOR_TYPES:
@@ -398,21 +345,15 @@ class SmartBotPlayer(BasePlayer, SmartBotObserver):
                     return rumor_card
         return None
 
-    def _game_log_to_truth_equations(self) -> list[ProbabilityEquation]:
+    def _game_log_to_truth_equations(self) -> list[BooleanStatement]:
         equations = super()._game_log_to_truth_equations()
         # PLAYER KNOWLEDGE OF THE GAME INSTANCE...
-        # This player owns their own rumor cards and only those rumor cards:
+        # This player has their own rumor cards and only those rumor cards:
         for rumor_card in RUMORS:
-            equations.append(
-                ProbabilityEquation(
-                    lhs=ProbabilityExpression(
-                        event=PlayerHasCard(
-                            player_index=self.agent_index,
-                            rumor_card=rumor_card,
-                        )
-                    ),
-                    rhs=(1 if rumor_card in self._rumor_cards else 0),
-                )
-            )
+            expression = CardIsInLocation(rumor_card, self.agent_index)
+            if rumor_card in self._rumor_cards:
+                equations.append(expression)
+            else:
+                equations.append(Not(expression))
         equations = list(set(equations))  # Remove duplicates.  # TODO: Preserve order?
         return equations
