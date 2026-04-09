@@ -5,10 +5,16 @@
     "cSpell.words": [
         "aiger",
         "Cluedo",
+        "Kemper",
         "numpy",
         "pblib",
         "plotly",
-        "pydantic"
+        "pydantic",
+        "pysat",
+        "satisfiability",
+        "scriptsize",
+        "Tseitin",
+        "vpool"
     ],
     "editor.codeActionsOnSave": {
         "source.fixAll": "explicit",
