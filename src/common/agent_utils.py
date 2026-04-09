@@ -38,8 +38,10 @@ class BaseAgent(abc.ABC):
     player_indices: list[AgentIndex]
     n_cards_per_player: int
 
-    def __post_init__(self):
-        self._game_log: list[GameLogEntry] = []
+    _game_log: list[GameLogEntry] = dataclasses.field(init=False)
+
+    def __post_init__(self) -> None:
+        self._game_log = []
 
     def add_game_log_entry(
         self,
@@ -81,14 +83,9 @@ class BaseObserver(BaseAgent, abc.ABC):
     pass
 
 
+@dataclasses.dataclass
 class BasePlayer(BaseAgent, abc.ABC):
-    def __init__(
-        self,
-        rumor_cards: list[RumorCard],
-        **kwargs,
-    ):
-        super().__init__(**kwargs)
-        self._rumor_cards = rumor_cards
+    rumor_cards: list[RumorCard]
 
     @abc.abstractmethod
     def make_guess(self, turn_index: int | None = None) -> Crime:
@@ -99,9 +96,12 @@ class BasePlayer(BaseAgent, abc.ABC):
         raise NotImplementedError
 
 
+@dataclasses.dataclass
 class NaivePlayer(BasePlayer):
-    def __init__(self, **kwargs):
-        super().__init(**kwargs)
+    _remaining_possible_rumors: Sequence[RumorCard] = dataclasses.field(init=False)
+
+    def __post_init__(self) -> None:
+        super().__post_init__()
         self._remaining_possible_rumors = deepcopy(RUMORS)
-        for rumor_card in self._rumor_cards:
+        for rumor_card in self.rumor_cards:
             self._remaining_possible_rumors.remove(rumor_card)

@@ -24,7 +24,7 @@ class UserPlayer(BasePlayer):
         return guess
 
     def answer_guess(self, guess: Crime) -> RumorCard | None:
-        rumor_options = set(guess) & set(self._rumor_cards)
+        rumor_options = set(guess) & set(self.rumor_cards)
         if len(rumor_options) == 0:
             return None
         else:

@@ -9,7 +9,8 @@ from common.agent_utils import AgentIndex, CaseFile
 from common.cards import RumorCard
 from common.consts import ExtraCards
 
-type CNF = list[list[int]]
+type Cnf = list[list[int]]
+type CardLocation = AgentIndex | CaseFile | ExtraCards
 
 
 class BooleanStatement(abc.ABC):
@@ -22,7 +23,7 @@ class BooleanStatement(abc.ABC):
         raise NotImplementedError
 
     @abc.abstractmethod
-    def to_cnf(self, variable_indices: dict[CardIsInLocation, int]) -> CNF:
+    def to_cnf(self, variables_to_lits: dict[CardIsInLocation, int]) -> Cnf:
         raise NotImplementedError
 
 
@@ -33,7 +34,7 @@ class CardIsInLocation(BooleanStatement):
     """
 
     rumor_card: RumorCard
-    location: AgentIndex | CaseFile | ExtraCards
+    location: CardLocation
 
     def __str__(self) -> str:
         return f"player {self.location} has {self.rumor_card.name} card"
@@ -41,8 +42,8 @@ class CardIsInLocation(BooleanStatement):
     def __hash__(self) -> int:
         return hash((self.location, self.rumor_card, type(self).__name__))
 
-    def to_cnf(self, variable_indices: dict[CardIsInLocation, int]) -> CNF:
-        return [[variable_indices[self]]]
+    def to_cnf(self, variables_to_lits: dict[CardIsInLocation, int]) -> Cnf:
+        return [[variables_to_lits[self]]]
 
 
 @dataclasses.dataclass
@@ -55,8 +56,8 @@ class Not(BooleanStatement):
     def __hash__(self) -> int:
         return hash((self.operand, type(self).__name__))
 
-    def to_cnf(self, variable_indices: dict[CardIsInLocation, int]) -> CNF:
-        return [[-variable_indices[self.operand]]]
+    def to_cnf(self, variables_to_lits: dict[CardIsInLocation, int]) -> Cnf:
+        return [[-variables_to_lits[self.operand]]]
 
 
 @dataclasses.dataclass
@@ -79,8 +80,8 @@ class And(_Multi):
     def __hash__(self) -> int:
         return hash((hash(super()), type(self).__name__))
 
-    def to_cnf(self, variable_indices: dict[CardIsInLocation, int]) -> CNF:
-        return [[variable_indices[e]] for e in self.operands]
+    def to_cnf(self, variables_to_lits: dict[CardIsInLocation, int]) -> Cnf:
+        return [[variables_to_lits[e]] for e in self.operands]
 
 
 @dataclasses.dataclass
@@ -91,8 +92,8 @@ class Or(_Multi):
     def __hash__(self) -> int:
         return hash((hash(super()), type(self).__name__))
 
-    def to_cnf(self, variable_indices: dict[CardIsInLocation, int]) -> CNF:
-        return [[variable_indices[e] for e in self.operands]]
+    def to_cnf(self, variables_to_lits: dict[CardIsInLocation, int]) -> Cnf:
+        return [[variables_to_lits[e] for e in self.operands]]
 
 
 @dataclasses.dataclass
@@ -103,9 +104,9 @@ class Xor(_Multi):
     def __hash__(self) -> int:
         return hash((hash(super()), type(self).__name__))
 
-    def to_cnf(self, variable_indices: dict[CardIsInLocation, int]) -> CNF:
+    def to_cnf(self, variables_to_lits: dict[CardIsInLocation, int]) -> Cnf:
         combinations = list(
-            itertools.combinations([-variable_indices[e] for e in self.operands], 2)
+            itertools.combinations([-variables_to_lits[e] for e in self.operands], 2)
         )
         combinations = [list(c) for c in combinations]
-        return [[variable_indices[e] for e in self.operands]] + combinations
+        return [[variables_to_lits[e] for e in self.operands]] + combinations

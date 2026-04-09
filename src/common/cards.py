@@ -56,13 +56,13 @@ class Character(RumorCard):
     pass
 
 
-RUMOR_TYPES = [Character, Weapon, Room]
+RUMOR_TYPES: list[type[RumorCard]] = [Character, Weapon, Room]
 
 CHARACTERS = [Character(name=n) for n in CHARACTER_NAMES]
 WEAPONS = [Weapon(name=n) for n in WEAPON_NAMES]
 ROOMS = [Room(name=n) for n in ROOM_NAMES]
 
-RUMORS = CHARACTERS + WEAPONS + ROOMS
+RUMORS: list[RumorCard] = [*CHARACTERS, *WEAPONS, *ROOMS]
 
 
 class Crime(NamedTuple):
