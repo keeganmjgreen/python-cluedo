@@ -1,6 +1,9 @@
+import sys
 from copy import deepcopy
 from time import sleep
-from typing import Literal
+from typing import Literal, Self
+
+from pydantic_settings import BaseSettings, CliApp, SettingsConfigDict
 
 from common import store
 from common.agent_utils import UnknownRumor
@@ -319,12 +322,12 @@ class TabletopGameAssistant:
     def _get_other_player_names(self, current_player_name: str) -> list[str]: ...
 
 
-def main(dashboard: bool, reveal_extra_cards_first: bool = False) -> None:
+def tabletop_game_assistant(
+    dashboard: bool, reveal_extra_cards_first: bool = False
+) -> None:
     print_logo()
     pause()
     _print("Initializing the Cluedo game assistant... ")
-    if dashboard:
-        dashboard_thread = run_dashboard()
     tabletop_game_assistant = TabletopGameAssistant(
         reveal_extra_cards_first=reveal_extra_cards_first
     )
@@ -332,13 +335,34 @@ def main(dashboard: bool, reveal_extra_cards_first: bool = False) -> None:
     _print("Give me information about your gameplay by answering my prompts. ", end="")
     _print("I will tell you what the crime was as soon as I've isolated the solution. ")
     tabletop_game_assistant.run(dashboard)
-    if dashboard:
-        dashboard_thread.join()
+
+
+def main() -> None:
+    cli_settings = _CliSettings.from_cli_args()
+    if cli_settings.dashboard:
+        dashboard_thread = run_dashboard()
     else:
-        return
+        dashboard_thread = None
+    tabletop_game_assistant(
+        dashboard=cli_settings.dashboard,
+        reveal_extra_cards_first=cli_settings.reveal_extra_cards_first,
+    )
+    if dashboard_thread is not None:
+        dashboard_thread.join()
+
+
+class _CliSettings(BaseSettings):
+    model_config = SettingsConfigDict(cli_kebab_case=True, cli_implicit_flags=True)
+
+    dashboard: bool = False
+    reveal_extra_cards_first: bool = False
+
+    @classmethod
+    def from_cli_args(cls) -> Self:
+        return CliApp.run(cls, cli_args=sys.argv[1:])
 
 
 if __name__ == "__main__":
     CHAR_PRINT_SECONDS = 0.01
     print("\n" * 100)
-    main(dashboard=True, reveal_extra_cards_first=False)
+    main()
