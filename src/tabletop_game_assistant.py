@@ -2,6 +2,7 @@ from copy import deepcopy
 from time import sleep
 from typing import Literal
 
+from common import store
 from common.agent_utils import UnknownRumor
 from common.cards import (
     CHARACTER_NAMES,
@@ -16,7 +17,7 @@ from common.cards import (
     Weapon,
 )
 from common.consts import MIN_N_PLAYERS
-from common.probabilities_artifact_manager import ProbabilitiesArtifactManager
+from common.dashboard import run_dashboard
 from common.smart_bot_agent import SmartBotObserver
 from common.utils import print_logo, sign
 
@@ -43,15 +44,8 @@ def _print(msg: str = "", end: str = "\n") -> None:
 
 
 class TabletopGameAssistant:
-    def __init__(
-        self, artifacting_id: int | None, reveal_extra_cards_first: bool = False
-    ):
-        self.artifacting_id = artifacting_id
+    def __init__(self, reveal_extra_cards_first: bool = False) -> None:
         self.reveal_extra_cards_first = reveal_extra_cards_first
-        if self.artifacting_id is not None:
-            self.probabilities_artifact_mgr = ProbabilitiesArtifactManager(
-                start_over=False
-            )
         self.player_names = self._get_human_player_names()
         self.player_indices = list(range(len(self.player_names)))
         self.n_players = len(self.player_names)
@@ -96,7 +90,7 @@ class TabletopGameAssistant:
 
         return player_names
 
-    def run(self) -> None:
+    def run(self, dashboard: bool) -> None:
         self.observer.add_game_log_entry(turn_index=self.turn_index, card_reveals=[])
         if self.n_extra_cards != 0 and self.reveal_extra_cards_first:
             self.observer.shown_extra_cards(
@@ -104,19 +98,16 @@ class TabletopGameAssistant:
             )
         while True:
             for player_name in self.player_names:
-                if self.artifacting_id is not None:
-                    probabilities_ser = self.observer.solve_truths_cnf_probabilities(
+                if dashboard:
+                    probabilities = self.observer.solve_truths_cnf_probabilities(
                         n_samples=N_SAMPLES_FOR_PROBABILITY
                     )
-                    self.probabilities_artifact_mgr.append_probabilities_ser(
-                        artifacting_id=self.artifacting_id,
-                        agent_type="Observer",
-                        agent_index=self.observer.agent_index,
-                        turn_index=self.turn_index,
-                        probabilities_ser=probabilities_ser,
+                    store.append_probabilities(
+                        str(self.observer), self.turn_index, probabilities
                     )
                 self.turn_index += 1
-                self._run_turn(current_player_name=player_name)
+                if self._run_turn(current_player_name=player_name):
+                    return
                 if self.n_extra_cards != 0 and not self.reveal_extra_cards_first:
                     observer_must_see_extra_cards = self.observer.must_see_extra_cards(
                         turn_index=self.turn_index
@@ -144,7 +135,7 @@ class TabletopGameAssistant:
             extra_cards.append(card_type(name=extra_card_name))
         return extra_cards
 
-    def _run_turn(self, current_player_name: str) -> None:
+    def _run_turn(self, current_player_name: str) -> bool:
         _print(f"It's {current_player_name}'s turn. ")
 
         _print(f"Who does {current_player_name} say killed the host? ", end="")
@@ -223,8 +214,8 @@ class TabletopGameAssistant:
                                 other_player_index=_other_player_index,
                                 rumor_card=None,
                             )
-                    self._try_solving_crime()
-                    break
+                    if self._try_solving_crime():
+                        return True
                 else:
                     abs_players_pos_delta = self.n_players // 2
                     direction = None
@@ -277,21 +268,23 @@ class TabletopGameAssistant:
                     other_player_index=other_player_index,
                     rumor_card=None,
                 )
-            self._try_solving_crime()
+            if self._try_solving_crime():
+                return True
             other_player_names.append(self.player_names[other_player_index])
             if len(other_player_names) == 2:
-                break
+                return False
             prev_direction = deepcopy(direction)
 
-    def _try_solving_crime(self):
-        result = self.observer.try_solving_crime()
-        if result is not None:
-            crime = result
-            _print("The Cluedo game assistant has solved the case! ")
-            _print(
-                f"The host was killed by {crime.character.capitalize()} with the "
-                f"{crime.weapon.capitalize()} in the {crime.room.capitalize()}. "
-            )
+    def _try_solving_crime(self) -> bool:
+        crime = self.observer.try_solving_crime()
+        if crime is None:
+            return False
+        _print("The Cluedo game assistant has solved the case! ")
+        _print(
+            f"The host was killed by {crime.character.capitalize()} with the "
+            f"{crime.weapon.capitalize()} in the {crime.room.capitalize()}. "
+        )
+        return True
 
     def _get_item_name(
         self,
@@ -326,20 +319,26 @@ class TabletopGameAssistant:
     def _get_other_player_names(self, current_player_name: str) -> list[str]: ...
 
 
-def main(artifacting_id: int = 0, reveal_extra_cards_first: bool = False) -> None:
+def main(dashboard: bool, reveal_extra_cards_first: bool = False) -> None:
     print_logo()
     pause()
     _print("Initializing the Cluedo game assistant... ")
+    if dashboard:
+        dashboard_thread = run_dashboard()
     tabletop_game_assistant = TabletopGameAssistant(
-        artifacting_id=artifacting_id, reveal_extra_cards_first=reveal_extra_cards_first
+        reveal_extra_cards_first=reveal_extra_cards_first
     )
     _print("Running the Cluedo game assistant... ")
     _print("Give me information about your gameplay by answering my prompts. ", end="")
     _print("I will tell you what the crime was as soon as I've isolated the solution. ")
-    tabletop_game_assistant.run()
+    tabletop_game_assistant.run(dashboard)
+    if dashboard:
+        dashboard_thread.join()
+    else:
+        return
 
 
 if __name__ == "__main__":
     CHAR_PRINT_SECONDS = 0.01
     print("\n" * 100)
-    main(artifacting_id=0, artifacting=True, reveal_extra_cards_first=False)
+    main(dashboard=True, reveal_extra_cards_first=False)

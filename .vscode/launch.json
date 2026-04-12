@@ -11,7 +11,8 @@
             "program": "src/game_simulator.py",
             "console": "integratedTerminal",
             "args": [
-                "--n-bot-players=4"
+                "--n-bot-players=4",
+                "--artifacting-id=0"
             ]
         }
     ]

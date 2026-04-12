@@ -43,6 +43,9 @@ class BaseAgent(abc.ABC):
     def __post_init__(self) -> None:
         self._game_log = []
 
+    def __str__(self) -> str:
+        return f"{self.agent_index} - {self.__class__.__name__}"
+
     def add_game_log_entry(
         self,
         turn_index: int,

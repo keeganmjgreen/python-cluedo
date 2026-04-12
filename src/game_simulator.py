@@ -1,11 +1,13 @@
 import dataclasses
 import sys
 from collections.abc import Sequence
+from time import sleep
 from typing import Self
 
 from pydantic import model_validator
 from pydantic_settings import BaseSettings, CliApp, SettingsConfigDict
 
+from common import store
 from common.agent_utils import (
     AgentIndex,
     BaseAgent,
@@ -15,7 +17,7 @@ from common.agent_utils import (
 )
 from common.cards import CHARACTERS, ROOMS, WEAPONS, Crime, RumorCard
 from common.consts import MIN_N_PLAYERS
-from common.probabilities_artifact_manager import ProbabilitiesArtifactManager
+from common.dashboard import run_dashboard
 from common.smart_bot_agent import SmartBotObserver, SmartBotPlayer
 from common.user_player import UserPlayer
 from common.utils import shuffled
@@ -102,11 +104,7 @@ def run_turn(
                 players_pos_delta += 1
 
 
-def run_game(
-    setup: GameSetup, artifacting_id: int | None, reveal_extra_cards_first: bool
-) -> None:
-    if artifacting_id is not None:
-        probabilities_artifact_mgr = ProbabilitiesArtifactManager(start_over=False)
+def run_game(setup: GameSetup, dashboard: bool, reveal_extra_cards_first: bool) -> None:
     n_extra_cards = len(setup.extra_cards)
     turn_index = 0
     for agent in setup.agents.values():
@@ -118,22 +116,15 @@ def run_game(
     won_agent_indices: list[AgentIndex] = []
     while True:
         for player in setup.players.values():
-            if artifacting_id is not None:
-                for agent in setup.agents:
+            if dashboard:
+                for agent in setup.agents.values():
                     if not isinstance(agent, SmartBotObserver):
                         continue
-                    probabilities_ser = agent.solve_truths_cnf_probabilities(
+                    probabilities = agent.solve_truths_cnf_probabilities(
                         n_samples=N_SAMPLES_FOR_PROBABILITY
                     )
-                    probabilities_artifact_mgr.append_probabilities_ser(
-                        artifacting_id=artifacting_id,
-                        agent_type=(
-                            "Player" if isinstance(agent, BasePlayer) else "Observer"
-                        ),
-                        agent_index=agent.agent_index,
-                        turn_index=turn_index,
-                        probabilities_ser=probabilities_ser,
-                    )
+                    store.append_probabilities(str(agent), turn_index, probabilities)
+                    sleep(0.1)
             turn_index += 1
             run_turn(turn_index, setup.players, player.agent_index, setup.observers)
             newly_won_agent_indices: list[AgentIndex] = []
@@ -222,28 +213,34 @@ def set_up_game(
 def game_simulator(
     player_types: Sequence[type[BasePlayer]],
     observer_types: Sequence[type[BaseObserver]] = (),
-    artifacting_id: int | None = None,
+    dashboard: bool = False,
     reveal_extra_cards_first: bool = False,
 ) -> None:
     game_setup = set_up_game(player_types=player_types, observer_types=observer_types)
     run_game(
         setup=game_setup,
-        artifacting_id=artifacting_id,
+        dashboard=dashboard,
         reveal_extra_cards_first=reveal_extra_cards_first,
     )
 
 
 def main() -> None:
     cli_settings = _CliSettings.from_cli_args()
+    if cli_settings.dashboard:
+        dashboard_thread = run_dashboard()
+    else:
+        dashboard_thread = None
     game_simulator(
         player_types=(
             [SmartBotPlayer] * cli_settings.n_bot_players
             + [UserPlayer] * cli_settings.n_human_players
         ),
         observer_types=([SmartBotObserver] if cli_settings.include_observer else []),
-        artifacting_id=cli_settings.artifacting_id,
+        dashboard=cli_settings.dashboard,
         reveal_extra_cards_first=cli_settings.reveal_extra_cards_first,
     )
+    if dashboard_thread is not None:
+        dashboard_thread.join()
 
 
 class _CliSettings(BaseSettings):
@@ -252,7 +249,7 @@ class _CliSettings(BaseSettings):
     n_bot_players: int = 0
     n_human_players: int = 0
     include_observer: bool = False
-    artifacting_id: int | None = None
+    dashboard: bool = False
     reveal_extra_cards_first: bool = False
 
     @model_validator(mode="after")
