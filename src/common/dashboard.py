@@ -26,7 +26,7 @@ app.layout = html.Div(
         html.H1(children="Python-Cluedo Dashboard", style={"textAlign": "center"}),
         html.Div(
             [
-                "Agent (Default: Latest)",
+                "Bot (Default: Latest)",
                 dcc.Dropdown(value="(Latest)", id="agent-dropdown-selection"),
                 "Turn (Default: Latest)",
                 dcc.Dropdown(value="(Latest)", id="turn_index-dropdown-selection"),
@@ -34,7 +34,8 @@ app.layout = html.Div(
         ),
         dcc.Graph(id="graph-content"),
         dcc.Interval(id="interval-component", interval=UPDATE_FREQ_MS, n_intervals=0),
-    ]
+    ],
+    style={"fontFamily": "Helvetica Neue, Helvetica, Arial, sans-serif"},
 )
 
 
@@ -86,7 +87,7 @@ def update_probabilities_heatmap(n: int, agent: str, turn_index: int):
     fig.update_xaxes(type="category")
     fig.update_yaxes(type="category")
     fig.update_layout(
-        title=f"Approximate Probabilities | Turn {turn_index:2.0f}, Agent {agent}"
+        title=f"Approximate Probabilities | Turn {turn_index:2.0f}, Bot {agent}"
     )
     return fig
 

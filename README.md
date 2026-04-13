@@ -1,68 +1,68 @@
+# `python-cluedo`: Cluedo Bot and Simulator
+
 🎶 _It's not a game; I'm not a robot AI challenging you..._ 🎶
 
 Except this is a game; the name of the game is Cluedo, and you are indeed being challenged by a robot AI.
 
-# This is `python-cluedo` 🕵️
+`python-cluedo` is software for the 70-year-old board game Cluedo (Clue in North America). It includes the following components:
 
-The `python-cluedo` suite is software for the 70-year-old board game Cluedo (Clue in North America). The Python implementation includes the following components:
+- Cluedo bot
+- Cluedo simulator
+- Cluedo assistant
+- Dashboard
 
-1. The powerful Cluedo bot.
-2. The Cluedo game simulator.
-3. The Cluedo game assistant.
-4. Artifacting and dashboard tools.
+## The rules of the game
 
-Each of these components are described in the following subsections. Warning: The following prose is increasingly snarky.
+The context of each Cluedo game is that a crime has taken place. A crime consists of a murder weapon, a character who was murdered[^1], and a room on the game board in which the murder took place. One wins by being the first to correctly guess the crime (weapon, character, and room). Players take turns starting _rumors_ about what the crime was and responding to other players' rumors, thereby narrowing down the possible weapons, characters, and rooms. When a player is confident enough, they can guess what the crime was. They must be confident enough because, if their guess is incorrect, they will be disqualified from the game.
 
-## 1. The powerful Cluedo bot
+## Cluedo bot
 
-> _A software implementation of Cluedo would be nothing without an unbeatable bot._
+The Cluedo bot is guaranteed to isolate the correct crime. The bot will win by doing so faster than an expert human player (unless that human is running the bot on their computer!).
 
-The bot (or AI, if you _must_ call it that) is guaranteed to isolate the correct crime. The bot will win by doing so faster than an expert human player (unless that human is running the bot on their computer!).
+The bot can be either an **observer** or a **player** of the game. As an observer, the bot acts as a bystander and does not affect the gameplay (except perhaps by making the players nervous). Incredibly, the bot will solve the crime even as a mere observer, who never sees any cards[^2]!
 
-The bot will solve the crime correctly even if the bot is acting as a bystander to the game and _never sees any cards that aren't mandatory to see_. That is, the bot can be used as a game observer who does not affect the gameplay (except perhaps by making the players nervous), or the bot can be used as a player who makes decisions which affect gameplay.
+**The bot as an observer:** As an observer, the bot regularly collects information from the gameplay and tries to isolate a solution to the crime. If not shown any of the extra "rumor" cards at the beginning of the game, it will identify the point in the gameplay when knowing those extra cards is the only thing left that it needs to solve the game. Looking at those cards is the only time when any cards are revealed to the bot, after which it immediately solves the crime.
 
-**The bot as an observer:** When the bot is used as an observer to a game, it regularly collects information of the gameplay and tries to isolate a solution to the crime. If not shown any of the extra "rumor" cards at the beginning of the game, it identifies when knowing those extra cards are all that stands between it and the solution. Subsequently looking at those cards is the only time when any cards are revealed to the bot, after which the bot solves the crime.
+**The bot as a player:** When the bot is directly playing the game, it does everything that it does as an observer, but it also interacts with the other players. The bot will solve the crime faster because it can _start rumors_ in order to _see other players' rumor cards_, thus more directly ruling out the possibilities of the crime. The bot also chooses which cards to show other players in response to their rumors, thus affecting their deductions.
 
-**The bot as a player:** When the bot is used as a player of the game, it does everything that it does as an observer to the game, but it also interacts with the other players. The bot will solve the crime faster because it can _start rumors_ to _see rumor cards_ that other players possess, thus more directly ruling out the possibilities of the crime. The bot also chooses what cards to show other players in answer to their rumors, thus affecting their deduction.
+## Cluedo simulator
 
-## 2. The Cluedo game simulator
+The Cluedo simulator sets up and runs virtual games of Cluedo between an arbitrary number of players. The players can be bots (with different strategies), humans (with worse strategies), or a mix of both.
 
-> _How do you test the bot? How do you benchmark it against other bots or players under controlled, reproducible conditions? You use the Cluedo game simulator._
+Humans playing the game receive gameplay information from the simulation and enter their decisions as the game unfolds.
 
-The Cluedo game simulator sets up and runs virtual games of Cluedo on the computer between an arbitrary number of players. The players can be bots (with different strategies), humans (with worse strategies), or a mix of both.
+With only bot players, one simulated game takes only seconds and some twenty turns before _every_ bot has solved the crime. Each game setup and gameplay has random elements, but by running multiple simulated games, luck-of-the-draw is ruled out and different strategies of bots can be compared.
 
-Humans playing the computer game receive gameplay information from the simulation and enter their decisions in real-time.
+```sh
+uv run src/game_simulator.py --n-bot-players 4 --include-observer --dashboard
+```
 
-Like human players, bot players must answer others' rumors, start their own rumors, and attempt to solve the crime. However, because each bot is so clever and the underlying software is written so efficiently, one simulated game takes only seconds and some twenty turns before _every_ bot has solved the crime. And because each game setup and gameplay has (pseudo) random elements, multiple simulator runs are readily used to compare bots and rule out the luck-of-the-draw.
+## Cluedo assistant
 
-## 3. The Cluedo game assistant
+Not unlike the Cluedo simulator, the Cluedo assistant allows bot–human interaction. However, you and the bot are on the same side against the other players.
 
-> _Don't know what strategy to use? Running out of space on your notepad? Questioning your prospects as a detective? Is this somehow the first time you and the fam are playing this timeless classic? Worry not! With the Cluedo game assistant, you'll take all the fun out of the game for everyone and you'll never have to play again!_
+You serve as the eyes, ears, and hands of the Cluedo assistant. While you're sneakily typing in the rumors that other players are starting and answering, the assistant's role is to take the guesswork (and fun) out of the game. By solving the crime for you as quickly as possible, the assistant brings family game night to a premature and bitter end.
 
-Not unlike the Cluedo game simulator, the Cluedo game assistant allows bot and human interaction. However, the bot and the squishy jelly organism (you) are on the same side and both of you, together in symbiosis, are against the other players. The mission: Win family game night and put a stop to its shenanigans as quickly as possible.
+```sh
+uv run src/tabletop_game_assistant.py --dashboard
+```
 
-With you as its eyes, ears, and hands, the Cluedo game assistant is your brain. You heard that right – having a brain is not a prerequisite for using the assistant. Where it is your responsibility to sneakily type in the rumors that players are starting and answering, and to enact decisions on behalf of the assistant, it is the assistant's role to take the guesswork (and fun) out of the game by solving the crime for you as quickly as possible.
+## Getting started
 
-## 4. Artifacting and dashboard tools
-
-...
-
-# TODOs
-
-- game board
-
-...
-
-# Getting started
+1. [Download](https://github.com/keeganmjgreen/python-cluedo/archive/refs/heads/main.zip) or clone the repo.
+2. With the [uv package manager](https://docs.astral.sh/uv/) installed, run `uv sync` to install the repo's dependencies.
+3. Run one of the above commands to start the Cluedo assistant or simulator.
 
 ## [Up and running in ten seconds](https://colab.research.google.com/github/keeganmjgreen/python-cluedo/blob/main/python_cluedo.ipynb)
 
-You can use the Cluedo game simulator or Cluedo game assistant _right now_ by following [this link](https://colab.research.google.com/github/keeganmjgreen/python-cluedo/blob/main/python_cluedo.ipynb) to a Python notebook in Google Colaboratory, a free online Python runtime, and following the simple instructions therein. Note that you need to be signed into a Google account to use Colaboratory.
+You can use the Cluedo simulator or Cluedo assistant _right now_ by following [this link](https://colab.research.google.com/github/keeganmjgreen/python-cluedo/blob/main/python_cluedo.ipynb) to a Python notebook in Google Colaboratory, a free online Python runtime, and following the simple instructions therein. Note that you need to be signed into a Google account to use Colaboratory.
 
-# Installation
+## Dashboard
 
-...
+The `--dashboard` CLI flag opens the `python-cluedo` dashboard. The dashboard shows, from the perspective of each bot, the approximate probabilities of each rumor card being in each possible location (in a player's hand, in the "case file", or among the extra cards). The dashboard updates in real time as the game progresses, allowing you to see how each bot narrows down the contents of the case file.
 
-# References
+![](docs/dashboard.png)
 
-...
+[^1]: Indeed, this makes no sense, because the murdered character can still participate in the game.
+
+[^2]: Except those cards which are mandatory to see.
