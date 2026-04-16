@@ -8,7 +8,7 @@
             "name": "Game Simulator",
             "type": "debugpy",
             "request": "launch",
-            "program": "src/game_simulator.py",
+            "program": "cluedo_simulator.py",
             "console": "integratedTerminal",
             "args": [
                 "--n-bot-players=4",

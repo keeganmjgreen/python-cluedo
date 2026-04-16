@@ -34,7 +34,7 @@ Humans playing the game receive gameplay information from the simulation and ent
 With only bot players, one simulated game takes only seconds and some twenty turns before _every_ bot has solved the crime. Each game setup and gameplay has random elements, but by running multiple simulated games, luck-of-the-draw is ruled out and different strategies of bots can be compared.
 
 ```sh
-uv run src/game_simulator.py --n-bot-players 4 --include-observer --dashboard
+uv run cluedo_simulator.py --n-bot-players 4 --include-observer --dashboard
 ```
 
 ## Cluedo assistant
@@ -44,7 +44,7 @@ Not unlike the Cluedo simulator, the Cluedo assistant allows bot–human interac
 You serve as the eyes, ears, and hands of the Cluedo assistant. While you're sneakily typing in the rumors that other players are starting and answering, the assistant's role is to take the guesswork (and fun) out of the game. By solving the crime for you as quickly as possible, the assistant brings family game night to a premature and bitter end.
 
 ```sh
-uv run src/tabletop_game_assistant.py --dashboard
+uv run cluedo_assistant.py --dashboard
 ```
 
 ## Getting started

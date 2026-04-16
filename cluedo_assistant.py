@@ -282,7 +282,7 @@ class TabletopGameAssistant:
         crime = self.observer.try_solving_crime()
         if crime is None:
             return False
-        _print("The Cluedo game assistant has solved the case! ")
+        _print("The Cluedo assistant has solved the case! ")
         _print(
             f"The host was killed by {crime.character.capitalize()} with the "
             f"{crime.weapon.capitalize()} in the {crime.room.capitalize()}. "
@@ -322,16 +322,14 @@ class TabletopGameAssistant:
     def _get_other_player_names(self, current_player_name: str) -> list[str]: ...
 
 
-def tabletop_game_assistant(
-    dashboard: bool, reveal_extra_cards_first: bool = False
-) -> None:
+def cluedo_assistant(dashboard: bool, reveal_extra_cards_first: bool = False) -> None:
     print_logo()
     pause()
-    _print("Initializing the Cluedo game assistant... ")
+    _print("Initializing the Cluedo assistant... ")
     tabletop_game_assistant = TabletopGameAssistant(
         reveal_extra_cards_first=reveal_extra_cards_first
     )
-    _print("Running the Cluedo game assistant... ")
+    _print("Running the Cluedo assistant... ")
     _print("Give me information about your gameplay by answering my prompts. ", end="")
     _print("I will tell you what the crime was as soon as I've isolated the solution. ")
     tabletop_game_assistant.run(dashboard)
@@ -343,7 +341,7 @@ def main() -> None:
         dashboard_thread = run_dashboard()
     else:
         dashboard_thread = None
-    tabletop_game_assistant(
+    cluedo_assistant(
         dashboard=cli_settings.dashboard,
         reveal_extra_cards_first=cli_settings.reveal_extra_cards_first,
     )

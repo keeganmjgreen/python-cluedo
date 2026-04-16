@@ -210,7 +210,7 @@ def set_up_game(
     return game_setup
 
 
-def game_simulator(
+def cluedo_simulator(
     player_types: Sequence[type[BasePlayer]],
     observer_types: Sequence[type[BaseObserver]] = (),
     dashboard: bool = False,
@@ -230,7 +230,7 @@ def main() -> None:
         dashboard_thread = run_dashboard()
     else:
         dashboard_thread = None
-    game_simulator(
+    cluedo_simulator(
         player_types=(
             [SmartBotPlayer] * cli_settings.n_bot_players
             + [UserPlayer] * cli_settings.n_human_players
