@@ -15,6 +15,7 @@
         "satisfiability",
         "scriptsize",
         "Tseitin",
+        "unsubmitted",
         "vpool"
     ],
     "editor.codeActionsOnSave": {
