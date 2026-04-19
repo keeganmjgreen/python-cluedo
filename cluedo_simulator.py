@@ -61,16 +61,13 @@ def run_turn(
     for agent in agents.values():
         agent.add_game_log_entry(turn_index=turn_index, guess=guess)
     furthest_player_reached = False
-    n_other_players = len(players) - 1
+    n_players = len(players)
     for direction in [-1, +1]:
         players_pos_delta = 1
-        while players_pos_delta <= n_other_players // 2 + 1:
-            if (
-                players_pos_delta == n_other_players // 2 + 1
-                and furthest_player_reached
-            ):
+        while players_pos_delta <= n_players // 2:
+            if players_pos_delta == n_players // 2 and furthest_player_reached:
                 break
-            if players_pos_delta == n_other_players // 2 + 1:
+            if players_pos_delta == n_players // 2:
                 furthest_player_reached = True
             second_player_pos = (
                 current_player.agent_index + players_pos_delta * direction
