@@ -103,8 +103,17 @@ class SmartBotObserver(BaseObserver):
 
         for game_log_entry in self._game_log:
             for card_reveal in game_log_entry.card_reveals:
-                if isinstance(card_reveal.rumor_card, UnknownRumor):
-                    assert game_log_entry.turn_player_index != self.agent_index
+                if isinstance(card_reveal.rumor_card, RumorCard):
+                    # If another player has shown this player a rumor card, then this
+                    # player knows that that other player has that rumor card.
+                    statements.append(
+                        CardIsInLocation(
+                            card_reveal.rumor_card, card_reveal.other_player_index
+                        )
+                    )
+                elif game_log_entry.guess is None:
+                    continue
+                elif isinstance(card_reveal.rumor_card, UnknownRumor):
                     # If a player A (can be this player) shows another player B (cannot
                     # be this player) a rumor card, then this player knows that player A
                     # has at least one of the rumor cards in player B's guess:
@@ -119,15 +128,7 @@ class SmartBotObserver(BaseObserver):
                             ]
                         )
                     )
-                elif card_reveal.rumor_card is not None:
-                    # If another player has shown this player a rumor card, then this
-                    # player knows that that other player has that rumor card.
-                    statements.append(
-                        CardIsInLocation(
-                            card_reveal.rumor_card, card_reveal.other_player_index
-                        )
-                    )
-                else:
+                else:  # card_reveal.rumor_card is None
                     for rumor_card in game_log_entry.guess:
                         # If a player A (can be this player) does not show another
                         # player B (cannot be this player) a rumor card, then this
