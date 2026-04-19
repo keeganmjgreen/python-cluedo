@@ -59,12 +59,7 @@ def run_turn(
     current_player = players[current_player_index]
     guess = current_player.make_guess(turn_index=turn_index)
     for agent in agents.values():
-        agent.add_game_log_entry(
-            turn_index=turn_index,
-            turn_player_index=current_player.agent_index,
-            guess=guess,
-            card_reveals=[],
-        )
+        agent.add_game_log_entry(turn_index=turn_index, guess=guess)
     furthest_player_reached = False
     n_other_players = len(players) - 1
     for direction in [-1, +1]:
@@ -108,7 +103,6 @@ def run_game(setup: GameSetup, dashboard: bool, reveal_extra_cards_first: bool) 
     n_extra_cards = len(setup.extra_cards)
     turn_index = 0
     for agent in setup.agents.values():
-        agent.add_game_log_entry(turn_index=turn_index, card_reveals=[])
         if n_extra_cards != 0 and reveal_extra_cards_first:
             agent.sees_extra_cards(turn_index=turn_index, rumor_cards=setup.extra_cards)
     won_agent_indices: list[AgentIndex] = []

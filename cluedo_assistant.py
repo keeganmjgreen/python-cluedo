@@ -94,7 +94,6 @@ class TabletopGameAssistant:
         return player_names
 
     def run(self, dashboard: bool) -> None:
-        self.observer.add_game_log_entry(turn_index=self.turn_index, card_reveals=[])
         if self.n_extra_cards != 0 and self.reveal_extra_cards_first:
             self.observer.sees_extra_cards(
                 turn_index=self.turn_index, rumor_cards=self._get_extra_cards()
@@ -154,12 +153,7 @@ class TabletopGameAssistant:
         )
 
         current_player_index = self.player_names.index(current_player_name)
-        self.observer.add_game_log_entry(
-            turn_index=self.turn_index,
-            turn_player_index=current_player_index,
-            guess=guess,
-            card_reveals=[],
-        )
+        self.observer.add_game_log_entry(turn_index=self.turn_index, guess=guess)
         _print("Who gave evidence that the suspect, weapon, or room was wrong? ")
         other_player_names = []
         furthest_player_reached = False
