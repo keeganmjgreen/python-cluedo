@@ -1,5 +1,9 @@
+from __future__ import annotations
+
+import abc
 import dataclasses
-from typing import NamedTuple
+from collections.abc import Sequence
+from typing import NamedTuple, Self
 
 CHARACTER_NAMES = [
     "mustard",
@@ -34,7 +38,7 @@ ROOM_NAMES = [
 
 
 @dataclasses.dataclass
-class RumorCard:
+class RumorCard(abc.ABC):
     name: str
 
     def __str__(self) -> str:
@@ -43,24 +47,35 @@ class RumorCard:
     def __hash__(self) -> int:
         return hash(self.name)
 
+    @classmethod
+    @abc.abstractmethod
+    def instances(cls) -> Sequence[Self]:
+        raise NotImplementedError
+
 
 class Room(RumorCard):
-    pass
+    @classmethod
+    def instances(cls) -> Sequence[Room]:
+        return ROOMS
 
 
 class Weapon(RumorCard):
-    pass
+    @classmethod
+    def instances(cls) -> Sequence[Weapon]:
+        return WEAPONS
 
 
 class Character(RumorCard):
-    pass
+    @classmethod
+    def instances(cls) -> Sequence[Character]:
+        return CHARACTERS
 
 
-RUMOR_TYPES: list[type[RumorCard]] = [Character, Weapon, Room]
+RUMOR_TYPES: list[type[Character | Weapon | Room]] = [Character, Weapon, Room]
 
-CHARACTERS = [Character(name=n) for n in CHARACTER_NAMES]
-WEAPONS = [Weapon(name=n) for n in WEAPON_NAMES]
-ROOMS = [Room(name=n) for n in ROOM_NAMES]
+CHARACTERS: list[Character] = [Character(name=n) for n in CHARACTER_NAMES]
+WEAPONS: list[Weapon] = [Weapon(name=n) for n in WEAPON_NAMES]
+ROOMS: list[Room] = [Room(name=n) for n in ROOM_NAMES]
 
 RUMORS: list[RumorCard] = [*CHARACTERS, *WEAPONS, *ROOMS]
 
