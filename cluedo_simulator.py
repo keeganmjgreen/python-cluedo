@@ -82,7 +82,7 @@ def run_turn(
             )
             second_player = players[(len(players) + second_player_pos) % len(players)]
             rumor_card = second_player.answer_guess(guess)
-            current_player.shown_card(
+            current_player.sees_card(
                 turn_index=turn_index,
                 other_player_index=second_player.agent_index,
                 rumor_card=rumor_card,
@@ -93,7 +93,7 @@ def run_turn(
                 if agent.agent_index
                 not in [current_player.agent_index, second_player.agent_index]
             ]:
-                third_agent.shown_card(
+                third_agent.sees_card(
                     turn_index=turn_index,
                     other_player_index=second_player.agent_index,
                     rumor_card=(UnknownRumor() if rumor_card is not None else None),
@@ -110,9 +110,7 @@ def run_game(setup: GameSetup, dashboard: bool, reveal_extra_cards_first: bool) 
     for agent in setup.agents.values():
         agent.add_game_log_entry(turn_index=turn_index, card_reveals=[])
         if n_extra_cards != 0 and reveal_extra_cards_first:
-            agent.shown_extra_cards(
-                turn_index=turn_index, rumor_cards=setup.extra_cards
-            )
+            agent.sees_extra_cards(turn_index=turn_index, rumor_cards=setup.extra_cards)
     won_agent_indices: list[AgentIndex] = []
     while True:
         for player in setup.players.values():
@@ -137,7 +135,7 @@ def run_game(setup: GameSetup, dashboard: bool, reveal_extra_cards_first: bool) 
                             turn_index=turn_index
                         )
                         if agent_must_see_extra_cards:
-                            agent.shown_extra_cards(
+                            agent.sees_extra_cards(
                                 turn_index=turn_index, rumor_cards=setup.extra_cards
                             )
                 result = agent.try_solving_crime()

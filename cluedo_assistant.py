@@ -96,7 +96,7 @@ class TabletopGameAssistant:
     def run(self, dashboard: bool) -> None:
         self.observer.add_game_log_entry(turn_index=self.turn_index, card_reveals=[])
         if self.n_extra_cards != 0 and self.reveal_extra_cards_first:
-            self.observer.shown_extra_cards(
+            self.observer.sees_extra_cards(
                 turn_index=self.turn_index, rumor_cards=self._get_extra_cards()
             )
         while True:
@@ -116,7 +116,7 @@ class TabletopGameAssistant:
                         turn_index=self.turn_index
                     )
                     if observer_must_see_extra_cards:
-                        self.observer.shown_extra_cards(
+                        self.observer.sees_extra_cards(
                             turn_index=self.turn_index,
                             rumor_cards=self._get_extra_cards(),
                         )
@@ -212,7 +212,7 @@ class TabletopGameAssistant:
                     # TODO: Undo option(s)? User double checks?
                     for _other_player_index in self.player_indices:
                         if _other_player_index != current_player_index:
-                            self.observer.shown_card(
+                            self.observer.sees_card(
                                 turn_index=self.turn_index,
                                 other_player_index=_other_player_index,
                                 rumor_card=None,
@@ -237,7 +237,7 @@ class TabletopGameAssistant:
                         _other_player_index = (
                             current_player_index + (-direction) * _player_pos_delta
                         ) % self.n_players
-                        self.observer.shown_card(
+                        self.observer.sees_card(
                             turn_index=self.turn_index,
                             other_player_index=_other_player_index,
                             rumor_card=None,
@@ -247,13 +247,13 @@ class TabletopGameAssistant:
                     _other_player_index = (
                         current_player_index + direction * _player_pos_delta
                     ) % self.n_players
-                    self.observer.shown_card(
+                    self.observer.sees_card(
                         turn_index=self.turn_index,
                         other_player_index=_other_player_index,
                         rumor_card=None,
                     )
             if other_player_name not in other_player_names + [""]:
-                self.observer.shown_card(
+                self.observer.sees_card(
                     turn_index=self.turn_index,
                     other_player_index=other_player_index,
                     rumor_card=UnknownRumor(),
@@ -266,7 +266,7 @@ class TabletopGameAssistant:
                 other_player_index = (
                     current_player_index + direction * abs_players_pos_delta
                 ) % self.n_players
-                self.observer.shown_card(
+                self.observer.sees_card(
                     turn_index=self.turn_index,
                     other_player_index=other_player_index,
                     rumor_card=None,

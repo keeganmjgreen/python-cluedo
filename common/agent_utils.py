@@ -57,7 +57,7 @@ class BaseAgent(abc.ABC):
             GameLogEntry(turn_index, turn_player_index, guess, card_reveals)
         )
 
-    def shown_card(
+    def sees_card(
         self,
         turn_index: int,
         other_player_index: AgentIndex | ExtraCards,
@@ -67,11 +67,11 @@ class BaseAgent(abc.ABC):
             CardReveal(other_player_index, rumor_card)
         )
 
-    def shown_extra_cards(
+    def sees_extra_cards(
         self, turn_index: int, rumor_cards: Sequence[RumorCard]
     ) -> None:
         for rumor_card in rumor_cards:
-            self.shown_card(
+            self.sees_card(
                 turn_index=turn_index,
                 other_player_index=EXTRA_CARDS,
                 rumor_card=rumor_card,
