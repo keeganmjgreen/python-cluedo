@@ -1,7 +1,7 @@
 import sys
 from copy import deepcopy
 from time import sleep
-from typing import Literal, Self
+from typing import Any, Literal, Self
 
 from pydantic_settings import BaseSettings, CliApp, SettingsConfigDict
 
@@ -27,8 +27,8 @@ from common.utils import print_logo, sign
 N_SAMPLES_FOR_PROBABILITY = 10
 
 
-def format_list(l: list, sep="and") -> str:
-    return ", ".join(l[:-1]) + f", {sep} " + l[-1]
+def format_list(items: list[Any], sep: str = "and") -> str:
+    return ", ".join(items[:-1]) + f", {sep} " + items[-1]
 
 
 def pause(duration_seconds: float = 0.5) -> None:
@@ -64,7 +64,7 @@ class TabletopGameAssistant:
             "Please provide the player names in turn order, beginning with the starting player. "
         )
         current_player_num = 1
-        player_names = []
+        player_names: list[str] = []
 
         while True:
             _print(
@@ -152,7 +152,7 @@ class TabletopGameAssistant:
         current_player_index = self.player_names.index(current_player_name)
         self.observer.add_game_log_entry(turn_index=self.turn_index, guess=guess)
         _print("Who gave evidence that the suspect, weapon, or room was wrong? ")
-        other_player_names = []
+        other_player_names: list[str] = []
         furthest_player_reached = False
         while True:  # TODO: Convert to for-loop?
             print(" - ", end="")
@@ -275,8 +275,8 @@ class TabletopGameAssistant:
             return False
         _print("The Cluedo assistant has solved the case! ")
         _print(
-            f"The host was killed by {crime.character.capitalize()} with the "
-            f"{crime.weapon.capitalize()} in the {crime.room.capitalize()}. "
+            f"The host was killed by {crime.character.name.capitalize()} with the "
+            f"{crime.weapon.name.capitalize()} in the {crime.room.name.capitalize()}. "
         )
         return True
 
@@ -309,8 +309,6 @@ class TabletopGameAssistant:
                 )
 
         return item_name.lower()
-
-    def _get_other_player_names(self, current_player_name: str) -> list[str]: ...
 
 
 def cluedo_assistant(dashboard: bool, reveal_extra_cards_first: bool = False) -> None:
