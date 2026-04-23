@@ -1,18 +1,16 @@
+import os
 import sys
 from copy import deepcopy
 from time import sleep
-from typing import Any, Literal, Self
+from typing import Self
 
 from pydantic_settings import BaseSettings, CliApp, SettingsConfigDict
 
 from common import store
 from common.agent_utils import UnknownRumor
 from common.cards import (
-    CHARACTER_NAMES,
     N_CASE_FILE_CARDS,
-    ROOM_NAMES,
     RUMORS,
-    WEAPON_NAMES,
     Character,
     Crime,
     Room,
@@ -22,29 +20,15 @@ from common.cards import (
 from common.consts import MIN_N_PLAYERS
 from common.dashboard import run_dashboard
 from common.smart_bot_agent import SmartBotObserver
+from common.textio import TextIo, format_list
 from common.utils import print_logo, sign
 
 N_SAMPLES_FOR_PROBABILITY = 10
 
 
-def format_list(items: list[Any], sep: str = "and") -> str:
-    return ", ".join(items[:-1]) + f", {sep} " + items[-1]
-
-
-def pause(duration_seconds: float = 0.5) -> None:
-    sleep(duration_seconds)
-
-
-def _print(msg: str = "", end: str = "\n") -> None:
-    print(msg, end="")
-    pause()
-    print(end, end="")
-    if end == "\n":
-        pause()
-
-
 class TabletopGameAssistant:
-    def __init__(self, reveal_extra_cards_first: bool = False) -> None:
+    def __init__(self, textio: TextIo, reveal_extra_cards_first: bool = False) -> None:
+        self.textio = textio
         self.reveal_extra_cards_first = reveal_extra_cards_first
         self.player_names = self._get_human_player_names()
         self.player_indices = list(range(len(self.player_names)))
@@ -58,23 +42,20 @@ class TabletopGameAssistant:
         self.n_extra_cards = self.observer.n_extra_cards
         self.turn_index = 0
 
-    @staticmethod
-    def _get_human_player_names() -> list[str]:
-        _print(
-            "Please provide the player names in turn order, beginning with the starting player. "
+    def _get_human_player_names(self) -> list[str]:
+        self.textio.print_(
+            "Please provide the player names in turn order, beginning with the starting player."
         )
         current_player_num = 1
         player_names: list[str] = []
 
         while True:
-            _print(
+            player_name = self.textio.input_(
                 f"Player {current_player_num} name{f' (<Enter> if no player {current_player_num})' if len(player_names) >= MIN_N_PLAYERS else ''}: ",
-                end="",
             )
-            player_name = input()
 
             if player_name.lower() in [n.lower() for n in player_names]:
-                _print("Player names must be unique. ", end="")
+                self.textio.print_("Player names must be unique.", end=" ")
                 continue
 
             if player_name != "":
@@ -85,7 +66,9 @@ class TabletopGameAssistant:
                 if n_players >= MIN_N_PLAYERS:
                     break
                 else:
-                    _print(f"There must be at least {MIN_N_PLAYERS} players. ", end="")
+                    self.textio.print_(
+                        f"There must be at least {MIN_N_PLAYERS} players.", end=" "
+                    )
                     continue
 
         return player_names
@@ -118,59 +101,63 @@ class TabletopGameAssistant:
                         )
 
     def _get_extra_cards(self) -> list[RumorCard]:
-        _print("Look at the extra cards. ")
-        _print("What are they? ")
+        self.textio.print_("Look at the extra cards.")
+        self.textio.print_("What are they?")
         extra_cards = []
         # TODO: Select from list narrowed down by observer.
-        # TODO: No duplicate rumor cards entered.
+        options = RUMORS
+        extra_cards: list[RumorCard] = []
         for i in range(self.n_extra_cards):
-            extra_card_name = self._get_item_name(type_of_item="rumor card")
-            if extra_card_name in CHARACTER_NAMES:
-                card_type = Character
-            elif extra_card_name in WEAPON_NAMES:
-                card_type = Weapon
-            elif extra_card_name in ROOM_NAMES:
-                card_type = Room
-            extra_cards.append(card_type(name=extra_card_name))
+            extra_card = self.textio.get_rumor_card(
+                prompt=f"Enter extra card #{i + 1}/{self.n_extra_cards}",
+                options=options,
+            )
+            extra_cards.append(extra_card)
+            options = [o for o in options if o != extra_card]
         return extra_cards
 
     def _run_turn(self, current_player_name: str) -> bool:
-        _print(f"It's {current_player_name}'s turn. ")
+        self.textio.print_(f"It's {current_player_name}'s turn.")
 
-        _print(f"Who does {current_player_name} say killed the host? ", end="")
-        character_name = self._get_item_name("character")
-        _print(f"How does {current_player_name} say the crime was committed? ", end="")
-        weapon_name = self._get_item_name("weapon")
-        _print(f"Where does {current_player_name} say the murder took place? ", end="")
-        room_name = self._get_item_name("room")
-        guess = Crime(
-            character=Character(name=character_name),
-            weapon=Weapon(name=weapon_name),
-            room=Room(name=room_name),
+        character = self.textio.get_rumor_card(
+            prompt=f"Which character does {current_player_name} say killed the host?",
+            options=Character.instances(),
         )
+        weapon = self.textio.get_rumor_card(
+            prompt=f"What weapon does {current_player_name} say was used?",
+            options=Weapon.instances(),
+        )
+        room = self.textio.get_rumor_card(
+            prompt=f"Which room does {current_player_name} say the murder took place in?",
+            options=Room.instances(),
+        )
+        guess = Crime(character=character, weapon=weapon, room=room)
 
         current_player_index = self.player_names.index(current_player_name)
         self.observer.add_game_log_entry(turn_index=self.turn_index, guess=guess)
-        _print("Who gave evidence that the suspect, weapon, or room was wrong? ")
+        self.textio.print_(
+            "Who gave evidence that the suspect, weapon, or room was wrong?"
+        )
         other_player_names: list[str] = []
         furthest_player_reached = False
         while True:  # TODO: Convert to for-loop?
-            print(" - ", end="")
-            other_player_name = self._get_item_name(
-                "player"
+            other_player_name = (
+                self._get_player_name()
             )  # TODO: Make more user-friendly?
             if other_player_name == current_player_name.lower():
-                _print(
-                    "The player answering the guess cannot be the same as the player making the guess. "
+                self.textio.print_(
+                    "The player answering the guess cannot be the same as the player making the guess.",
+                    end=" ",
                 )
                 continue
             if other_player_name in [n.lower() for n in other_player_names]:
-                _print("The same player cannot be entered twice. ", end="")
+                self.textio.print_("The same player cannot be entered twice.", end=" ")
                 if furthest_player_reached:
-                    _print("If there is no other player, press <Enter>. ", end="")
-                _print()
+                    self.textio.print_(
+                        "If there is no other player, press <Enter>.", end=" "
+                    )
                 continue
-            if other_player_name != "":
+            if other_player_name is not None:
                 other_player_index = [n.lower() for n in self.player_names].index(
                     other_player_name
                 )
@@ -198,7 +185,9 @@ class TabletopGameAssistant:
             else:
                 if len(other_player_names) == 0:
                     # TODO: "...(<Enter> if no player)..."
-                    _print("You've indicated that no players answered the guess. ")
+                    self.textio.print_(
+                        "You've indicated that no players answered the guess."
+                    )
                     # TODO:
                     # TODO: Undo option(s)? User double checks?
                     for _other_player_index in self.player_indices:
@@ -212,13 +201,14 @@ class TabletopGameAssistant:
                         return True
                 else:
                     abs_players_pos_delta = self.n_players // 2
-                    direction = None
 
             if len(other_player_names) == 1:
                 if prev_direction is not None:
                     if direction is not None:
                         if prev_direction != -direction:
-                            _print("That player cannot be entered. ", end="")
+                            self.textio.print_(
+                                "That player cannot be entered.", end=" "
+                            )
                             continue
                     direction = -prev_direction
                 else:
@@ -243,14 +233,17 @@ class TabletopGameAssistant:
                         other_player_index=_other_player_index,
                         rumor_card=None,
                     )
-            if other_player_name not in other_player_names + [""]:
+            if (
+                other_player_name is not None
+                and other_player_name not in other_player_names
+            ):
                 self.observer.sees_card(
                     turn_index=self.turn_index,
                     other_player_index=other_player_index,
                     rumor_card=UnknownRumor(),
                 )
             elif (
-                other_player_name == ""
+                other_player_name is None
                 and len(other_player_names) == 1
                 and prev_direction is not None
             ):
@@ -273,54 +266,41 @@ class TabletopGameAssistant:
         crime = self.observer.try_solving_crime()
         if crime is None:
             return False
-        _print("The Cluedo assistant has solved the case! ")
-        _print(
+        self.textio.print_("The Cluedo assistant has solved the case!")
+        self.textio.print_(
             f"The host was killed by {crime.character.name.capitalize()} with the "
-            f"{crime.weapon.name.capitalize()} in the {crime.room.name.capitalize()}. "
+            f"{crime.weapon.name.capitalize()} in the {crime.room.name.capitalize()}."
         )
         return True
 
-    def _get_item_name(
-        self,
-        type_of_item: Literal["character", "weapon", "room", "rumor card", "player"],
-    ) -> str:
-        item_names_lookup = {
-            "character": CHARACTER_NAMES,
-            "weapon": WEAPON_NAMES,
-            "room": ROOM_NAMES,
-            "rumor card": [*CHARACTER_NAMES, *WEAPON_NAMES, *ROOM_NAMES],
-            "player": self.player_names,
-        }
-        item_names = item_names_lookup[type_of_item]
+    def _get_player_name(self) -> str | None:
         while True:
-            _print(f"Enter {type_of_item} name: ", end="")
-            item_name = input()
-            pause()
-            if item_name.lower() in [n.lower() for n in item_names]:
-                break
+            player_name = self.textio.input_(
+                f"Enter player name ({format_list(self.player_names, 'or')}): "
+            )
+            if player_name.lower() in [n.lower() for n in self.player_names]:
+                return player_name.lower()
             else:
-                if item_name != "":
-                    _print(f"I don't recognize that {type_of_item}. ", end="")
-                elif type_of_item == "player":
-                    break
-                _print(
-                    f"Please enter {format_list([n.title() if type_of_item != 'player' else n for n in item_names], 'or')}. ",
-                    end="",
-                )
-
-        return item_name.lower()
+                if player_name == "":
+                    return None
+                else:
+                    self.textio.print_("I don't recognize that player.", end=" ")
 
 
 def cluedo_assistant(dashboard: bool, reveal_extra_cards_first: bool = False) -> None:
+    print()
     print_logo()
-    pause()
-    _print("Initializing the Cluedo assistant... ")
+    textio = TextIo()
+    sleep(textio.pause_seconds)
+    textio.print_("Initializing the Cluedo assistant...")
     tabletop_game_assistant = TabletopGameAssistant(
-        reveal_extra_cards_first=reveal_extra_cards_first
+        textio=textio, reveal_extra_cards_first=reveal_extra_cards_first
     )
-    _print("Running the Cluedo assistant... ")
-    _print("Give me information about your gameplay by answering my prompts. ", end="")
-    _print("I will tell you what the crime was as soon as I've isolated the solution. ")
+    textio.print_("Running the Cluedo assistant...")
+    textio.print_(
+        "Give me information about your gameplay by answering my prompts. "
+        "I will tell you what the crime was as soon as I've isolated the solution."
+    )
     tabletop_game_assistant.run(dashboard)
 
 
@@ -350,5 +330,5 @@ class _CliSettings(BaseSettings):
 
 
 if __name__ == "__main__":
-    print("\n" * 100)
+    os.system("cls" if os.name == "nt" else "clear")
     main()

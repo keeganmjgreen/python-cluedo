@@ -77,7 +77,7 @@ CHARACTERS: list[Character] = [Character(name=n) for n in CHARACTER_NAMES]
 WEAPONS: list[Weapon] = [Weapon(name=n) for n in WEAPON_NAMES]
 ROOMS: list[Room] = [Room(name=n) for n in ROOM_NAMES]
 
-RUMORS: list[RumorCard] = [*CHARACTERS, *WEAPONS, *ROOMS]
+RUMORS: list[Character | Weapon | Room] = [*CHARACTERS, *WEAPONS, *ROOMS]
 
 
 class Crime(NamedTuple):
