@@ -5,6 +5,7 @@
     "cSpell.words": [
         "aiger",
         "Cluedo",
+        "imshow",
         "Kemper",
         "Neue",
         "numpy",
@@ -16,7 +17,9 @@
         "scriptsize",
         "Tseitin",
         "unsubmitted",
-        "vpool"
+        "vpool",
+        "xaxes",
+        "yaxes"
     ],
     "editor.codeActionsOnSave": {
         "source.fixAll": "explicit",

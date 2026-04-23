@@ -1,9 +1,12 @@
+# type: ignore
+
 import logging
 import threading
 from time import sleep
 
 import pandas as pd
 import plotly.express as px
+import plotly.graph_objects as go
 from dash import Dash, Input, Output, dcc, html
 
 from common import store
@@ -46,32 +49,32 @@ app.layout = html.Div(
 
 @app.callback(
     Output("agent-dropdown-selection", "options"),
-    Input(component_id="interval-component", component_property="n_intervals"),
+    Input("interval-component", "n_intervals"),
     Input("agent-dropdown-selection", "search_value"),
 )
-def update_options(n, search_value):
+def update_agent_dropdown(n: int, search_value: str) -> list[str]:
     df = store.get_probabilities_df()
     return ["(Latest)"] + df[AGENT].unique().tolist()
 
 
 @app.callback(
     Output("turn_index-dropdown-selection", "options"),
-    Input(component_id="interval-component", component_property="n_intervals"),
+    Input("interval-component", "n_intervals"),
     Input("agent-dropdown-selection", "search_value"),
     Input("agent-dropdown-selection", "value"),
 )
-def update_options(n, search_value, agent):
+def update_turn_dropdown(n: int, search_value: str, agent: str) -> list[str]:
     df = store.get_probabilities_df()
     return ["(Latest)"] + df[df[AGENT] == agent][TURN_INDEX].unique().tolist()
 
 
 @app.callback(
-    Output(component_id="graph-content", component_property="figure"),
-    Input(component_id="interval-component", component_property="n_intervals"),
-    Input(component_id="agent-dropdown-selection", component_property="value"),
-    Input(component_id="turn_index-dropdown-selection", component_property="value"),
+    Output("graph-content", "figure"),
+    Input("interval-component", "n_intervals"),
+    Input("agent-dropdown-selection", "value"),
+    Input("turn_index-dropdown-selection", "value"),
 )
-def update_probabilities_heatmap(n: int, agent: str, turn_index: int):
+def update_probabilities_heatmap(n: int, agent: str, turn_index: int) -> go.Figure:
     df = store.get_probabilities_df()
     if len(df) > 0:
         if agent in ["(Latest)", None]:
