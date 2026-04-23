@@ -24,7 +24,6 @@ from common.dashboard import run_dashboard
 from common.smart_bot_agent import SmartBotObserver
 from common.utils import print_logo, sign
 
-CHAR_PRINT_SECONDS = 0
 N_SAMPLES_FOR_PROBABILITY = 10
 
 
@@ -37,9 +36,7 @@ def pause(duration_seconds: float = 0.5) -> None:
 
 
 def _print(msg: str = "", end: str = "\n") -> None:
-    for char in msg:
-        print(char, end="")
-        sleep(CHAR_PRINT_SECONDS)
+    print(msg, end="")
     pause()
     print(end, end="")
     if end == "\n":
@@ -355,6 +352,5 @@ class _CliSettings(BaseSettings):
 
 
 if __name__ == "__main__":
-    CHAR_PRINT_SECONDS = 0.01
     print("\n" * 100)
     main()
