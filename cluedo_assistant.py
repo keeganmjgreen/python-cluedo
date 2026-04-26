@@ -119,6 +119,15 @@ class TabletopGameAssistant:
     def _run_turn(self, current_player_name: str) -> bool:
         self.textio.print_(f"It's {current_player_name}'s turn.")
 
+        guess = self._get_guess(current_player_name)
+        self.observer.add_game_log_entry(turn_index=self.turn_index, guess=guess)
+
+        self.textio.print_(
+            "Who gave evidence that the suspect, weapon, or room was wrong?"
+        )
+        return self._collect_responses(current_player_name)
+
+    def _get_guess(self, current_player_name: str) -> Crime:
         character = self.textio.get_rumor_card(
             prompt=f"Which character does {current_player_name} say killed the host?",
             options=Character.instances(),
@@ -131,13 +140,10 @@ class TabletopGameAssistant:
             prompt=f"Which room does {current_player_name} say the murder took place in?",
             options=Room.instances(),
         )
-        guess = Crime(character=character, weapon=weapon, room=room)
+        return Crime(character=character, weapon=weapon, room=room)
 
+    def _collect_responses(self, current_player_name: str) -> bool:
         current_player_index = self.player_names.index(current_player_name)
-        self.observer.add_game_log_entry(turn_index=self.turn_index, guess=guess)
-        self.textio.print_(
-            "Who gave evidence that the suspect, weapon, or room was wrong?"
-        )
         other_player_names: list[str] = []
         furthest_player_reached = False
         while True:  # TODO: Convert to for-loop?
