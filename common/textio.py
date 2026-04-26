@@ -25,10 +25,11 @@ class TextIo:
                 f"Enter player name (<Enter> for no player) ({format_list(player_names, 'or')}): ",
                 lower=True,
             )
-            if player_name in [n.lower() for n in player_names]:
-                return player_name
-            elif player_name is None:
+            lowercase_player_names = [n.lower() for n in player_names]
+            if player_name is None:
                 return None
+            elif player_name in lowercase_player_names:
+                return player_names[lowercase_player_names.index(player_name.lower())]
             else:
                 self.print_("Invalid player.", end=" ")
 
