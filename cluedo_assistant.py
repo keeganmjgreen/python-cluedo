@@ -26,11 +26,48 @@ from common.utils import print_logo, sign
 N_SAMPLES_FOR_PROBABILITY = 10
 
 
+def _get_human_player_names(textio: TextIo) -> list[str]:
+    textio.print_(
+        "Please provide the player names in turn order, beginning with the starting player."
+    )
+    current_player_num = 1
+    player_names: list[str] = []
+
+    while True:
+        player_name = textio.input_(
+            f"Player {current_player_num} name{f' (<Enter> if no player {current_player_num})' if len(player_names) >= MIN_N_PLAYERS else ''}: ",
+        )
+
+        if player_name.lower() in [n.lower() for n in player_names]:
+            textio.print_("Player names must be unique.", end=" ")
+            continue
+
+        if player_name != "":
+            player_names.append(player_name)
+            current_player_num += 1
+        else:
+            n_players = len(player_names)
+            if n_players >= MIN_N_PLAYERS:
+                break
+            else:
+                textio.print_(
+                    f"There must be at least {MIN_N_PLAYERS} players.", end=" "
+                )
+                continue
+
+    return player_names
+
+
 class TabletopGameAssistant:
-    def __init__(self, textio: TextIo, reveal_extra_cards_first: bool = False) -> None:
+    def __init__(
+        self,
+        textio: TextIo,
+        player_names: list[str],
+        reveal_extra_cards_first: bool = False,
+    ) -> None:
         self.textio = textio
+        self.player_names = player_names
         self.reveal_extra_cards_first = reveal_extra_cards_first
-        self.player_names = self._get_human_player_names()
         self.player_indices = list(range(len(self.player_names)))
         self.n_players = len(self.player_names)
         n_cards_per_player = (len(RUMORS) - N_CASE_FILE_CARDS) // self.n_players
@@ -41,37 +78,6 @@ class TabletopGameAssistant:
         )
         self.n_extra_cards = self.observer.n_extra_cards
         self.turn_index = 0
-
-    def _get_human_player_names(self) -> list[str]:
-        self.textio.print_(
-            "Please provide the player names in turn order, beginning with the starting player."
-        )
-        current_player_num = 1
-        player_names: list[str] = []
-
-        while True:
-            player_name = self.textio.input_(
-                f"Player {current_player_num} name{f' (<Enter> if no player {current_player_num})' if len(player_names) >= MIN_N_PLAYERS else ''}: ",
-            )
-
-            if player_name.lower() in [n.lower() for n in player_names]:
-                self.textio.print_("Player names must be unique.", end=" ")
-                continue
-
-            if player_name != "":
-                player_names.append(player_name)
-                current_player_num += 1
-            else:
-                n_players = len(player_names)
-                if n_players >= MIN_N_PLAYERS:
-                    break
-                else:
-                    self.textio.print_(
-                        f"There must be at least {MIN_N_PLAYERS} players.", end=" "
-                    )
-                    continue
-
-        return player_names
 
     def run(self, dashboard: bool) -> None:
         if self.n_extra_cards != 0 and self.reveal_extra_cards_first:
@@ -300,7 +306,9 @@ def cluedo_assistant(dashboard: bool, reveal_extra_cards_first: bool = False) ->
     sleep(textio.pause_seconds)
     textio.print_("Initializing the Cluedo assistant...")
     tabletop_game_assistant = TabletopGameAssistant(
-        textio=textio, reveal_extra_cards_first=reveal_extra_cards_first
+        textio=textio,
+        player_names=_get_human_player_names(textio),
+        reveal_extra_cards_first=reveal_extra_cards_first,
     )
     textio.print_("Running the Cluedo assistant...")
     textio.print_(
