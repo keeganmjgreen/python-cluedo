@@ -41,16 +41,16 @@ class BaseAgent(abc.ABC):
     player_indices: list[AgentIndex]
     n_cards_per_player: int
 
-    _game_log: list[GameLogEntry] = dataclasses.field(init=False)
+    game_log: list[GameLogEntry] = dataclasses.field(init=False)
 
     def __post_init__(self) -> None:
-        self._game_log = [GameLogEntry(turn_index=0)]
+        self.game_log = [GameLogEntry(turn_index=0)]
 
     def __str__(self) -> str:
         return f"{self.agent_index} - {self.__class__.__name__}"
 
     def add_game_log_entry(self, turn_index: int, guess: Crime) -> None:
-        self._game_log.append(GameLogEntry(turn_index, guess))
+        self.game_log.append(GameLogEntry(turn_index, guess))
 
     def sees_card(
         self,
@@ -58,7 +58,7 @@ class BaseAgent(abc.ABC):
         other_player_index: AgentIndex | ExtraCards,
         rumor_card: RumorCard | UnknownRumor | None,
     ) -> None:
-        self._game_log[turn_index].card_reveals.append(
+        self.game_log[turn_index].card_reveals.append(
             CardReveal(other_player_index, rumor_card)
         )
 

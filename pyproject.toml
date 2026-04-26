@@ -12,3 +12,6 @@ dependencies = [
     "python-sat[aiger,pblib]>=1.9.dev2,<2",
     "ruff>=0.15.9",
 ]
+
+[dependency-groups]
+dev = ["pytest>=9.0.3,<10"]

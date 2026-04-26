@@ -101,7 +101,7 @@ class SmartBotObserver(BaseObserver):
 
         # Player knowledge accumulated during gameplay:
 
-        for game_log_entry in self._game_log:
+        for game_log_entry in self.game_log:
             for card_reveal in game_log_entry.card_reveals:
                 if isinstance(card_reveal.rumor_card, RumorCard):
                     # If another player has shown this player a rumor card, then this

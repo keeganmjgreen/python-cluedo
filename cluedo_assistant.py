@@ -130,7 +130,7 @@ class CluedoAssistant:
         self.textio.print_(
             "Who gave evidence that the suspect, weapon, or room was wrong?"
         )
-        return self._collect_responses(current_player_name)
+        return self.collect_responses(current_player_name)
 
     def _get_guess(self, current_player_name: str) -> Crime:
         character = self.textio.get_rumor_card(
@@ -147,7 +147,7 @@ class CluedoAssistant:
         )
         return Crime(character=character, weapon=weapon, room=room)
 
-    def _collect_responses(self, current_player_name: str) -> bool:
+    def collect_responses(self, current_player_name: str) -> bool:
         current_player_index = self.player_names.index(current_player_name)
         seq = CircularSequence(self.player_indices)
         choiceset = [
