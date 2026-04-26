@@ -97,6 +97,8 @@ class TextIo:
 
 
 def format_list(items: list[Any], sep: str = "or") -> str:
+    if len(items) == 1:
+        return f"{items[0]}"
     if len(items) == 2:
         return f"{items[0]} {sep} {items[1]}"
     return ", ".join(items[:-1]) + f", {sep} " + items[-1]
