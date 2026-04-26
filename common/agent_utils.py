@@ -14,6 +14,7 @@ type CaseFile = Literal["Case File"]
 AgentIndex = int
 
 
+@dataclasses.dataclass(repr=True)
 class UnknownRumor:
     pass
 

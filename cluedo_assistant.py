@@ -1,6 +1,5 @@
 import os
 import sys
-from copy import deepcopy
 from time import sleep
 from typing import Self
 
@@ -17,11 +16,12 @@ from common.cards import (
     RumorCard,
     Weapon,
 )
+from common.circular_sequence import CircularSequence
 from common.consts import MIN_N_PLAYERS
 from common.dashboard import run_dashboard
 from common.smart_bot_agent import SmartBotObserver
 from common.textio import TextIo
-from common.utils import print_logo, sign
+from common.utils import print_logo
 
 N_SAMPLES_FOR_PROBABILITY = 10
 
@@ -149,127 +149,72 @@ class CluedoAssistant:
 
     def _collect_responses(self, current_player_name: str) -> bool:
         current_player_index = self.player_names.index(current_player_name)
-        other_player_names: list[str] = []
-        furthest_player_reached = False
-        while True:  # TODO: Convert to for-loop?
-            other_player_name = self.textio.get_player_name(self.player_names)
-            if other_player_name == current_player_name.lower():
-                self.textio.print_(
-                    "The player answering the guess cannot be the same as the player making the guess.",
-                    end=" ",
-                )
-                continue
-            if other_player_name in [n.lower() for n in other_player_names]:
-                self.textio.print_("The same player cannot be entered twice.", end=" ")
-                if furthest_player_reached:
-                    self.textio.print_(
-                        "If there is no other player, press <Enter>.", end=" "
-                    )
-                continue
-            if other_player_name is not None:
-                other_player_index = [n.lower() for n in self.player_names].index(
-                    other_player_name
-                )
-                raw_players_pos_delta = other_player_index - current_player_index
-                raw_abs_players_pos_delta = abs(raw_players_pos_delta)
-                if (
-                    raw_abs_players_pos_delta
-                    == self.n_players - raw_abs_players_pos_delta
-                ):
-                    furthest_player_reached = True
-                    abs_players_pos_delta = raw_abs_players_pos_delta
-                    direction = None
-                elif (
-                    raw_abs_players_pos_delta
-                    < self.n_players - raw_abs_players_pos_delta
-                ):
-                    abs_players_pos_delta = raw_abs_players_pos_delta
-                    direction = +sign(raw_players_pos_delta)
-                elif (
-                    raw_abs_players_pos_delta
-                    > self.n_players - raw_abs_players_pos_delta
-                ):
-                    abs_players_pos_delta = self.n_players - raw_abs_players_pos_delta
-                    direction = -sign(raw_players_pos_delta)
+        seq = CircularSequence(self.player_indices)
+        choiceset = [
+            seq.get_adjacent_items(
+                current_player_index, direction * (self.n_players // 2)
+            )
+            for direction in [-1, +1]
+        ]
+        farthest_player_index = (
+            seq.get_offset_item(current_player_index, self.n_players // 2)
+            if self.n_players % 2 == 0
+            else None
+        )
+        farthest_player_reached = False
+        while sum(len(choices) for choices in choiceset) > 0:
+            respondent_index = self.textio.get_player_index(
+                player_indexes=sorted({c for choices in choiceset for c in choices}),
+                all_player_names=self.player_names,
+            )
+            if respondent_index is None:
+                break
+            self.observer.sees_card(
+                turn_index=self.turn_index,
+                other_player_index=respondent_index,
+                rumor_card=UnknownRumor(),
+            )
+            if respondent_index == farthest_player_index:
+                farthest_player_reached = True
+                choiceset = [
+                    [c for c in choices if c != farthest_player_index]
+                    for choices in choiceset
+                ]
+                if len(choiceset) == 1:
+                    break
             else:
-                if len(other_player_names) == 0:
-                    # TODO: "...(<Enter> if no player)..."
-                    self.textio.print_(
-                        "You've indicated that no players answered the guess."
-                    )
-                    # TODO:
-                    # TODO: Undo option(s)? User double checks?
-                    for _other_player_index in self.player_indices:
-                        if _other_player_index != current_player_index:
-                            self.observer.sees_card(
-                                turn_index=self.turn_index,
-                                other_player_index=_other_player_index,
-                                rumor_card=None,
-                            )
-                    if self._try_solving_crime():
-                        return True
-                else:
-                    abs_players_pos_delta = self.n_players // 2
-
-            if len(other_player_names) == 1:
-                if prev_direction is not None:
-                    if direction is not None:
-                        if prev_direction != -direction:
-                            self.textio.print_(
-                                "That player cannot be entered.", end=" "
-                            )
-                            continue
-                    direction = -prev_direction
-                else:
-                    if direction is None:
-                        direction = 1
-                    for _player_pos_delta in range(1, abs_players_pos_delta):
-                        _other_player_index = (
-                            current_player_index + (-direction) * _player_pos_delta
-                        ) % self.n_players
+                for choices in choiceset:
+                    if respondent_index not in choices:
+                        continue
+                    choice_list = list(choices)
+                    nonrespondent_indexes = choice_list[
+                        : choice_list.index(respondent_index)
+                    ]
+                    for nonrespondent_index in nonrespondent_indexes:
                         self.observer.sees_card(
                             turn_index=self.turn_index,
-                            other_player_index=_other_player_index,
+                            other_player_index=nonrespondent_index,
                             rumor_card=None,
                         )
-            if direction is not None:
-                for _player_pos_delta in range(1, abs_players_pos_delta):
-                    _other_player_index = (
-                        current_player_index + direction * _player_pos_delta
-                    ) % self.n_players
-                    self.observer.sees_card(
-                        turn_index=self.turn_index,
-                        other_player_index=_other_player_index,
-                        rumor_card=None,
-                    )
-            if (
-                other_player_name is not None
-                and other_player_name not in other_player_names
-            ):
-                self.observer.sees_card(
-                    turn_index=self.turn_index,
-                    other_player_index=other_player_index,
-                    rumor_card=UnknownRumor(),
-                )
-            elif (
-                other_player_name is None
-                and len(other_player_names) == 1
-                and prev_direction is not None
-            ):
-                other_player_index = (
-                    current_player_index + direction * abs_players_pos_delta
-                ) % self.n_players
-                self.observer.sees_card(
-                    turn_index=self.turn_index,
-                    other_player_index=other_player_index,
-                    rumor_card=None,
-                )
+                choiceset = [
+                    choices for choices in choiceset if respondent_index not in choices
+                ]
+                if farthest_player_reached:
+                    break
             if self._try_solving_crime():
                 return True
-            other_player_names.append(self.player_names[other_player_index])
-            if len(other_player_names) == 2:
-                return False
-            prev_direction = deepcopy(direction)
+        all_choices = sorted({c for choices in choiceset for c in choices})
+        for choice in all_choices:
+            nonrespondent_index = choice
+            self.observer.sees_card(
+                turn_index=self.turn_index,
+                other_player_index=nonrespondent_index,
+                rumor_card=None,
+            )
+        if len(all_choices) > 0:
+            if self._try_solving_crime():
+                return True
+        return False
 
     def _try_solving_crime(self) -> bool:
         crime = self.observer.try_solving_crime()
