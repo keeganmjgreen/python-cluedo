@@ -20,7 +20,7 @@ from common.cards import (
 from common.consts import MIN_N_PLAYERS
 from common.dashboard import run_dashboard
 from common.smart_bot_agent import SmartBotObserver
-from common.textio import TextIo, format_list
+from common.textio import TextIo
 from common.utils import print_logo, sign
 
 N_SAMPLES_FOR_PROBABILITY = 10
@@ -153,9 +153,7 @@ class TabletopGameAssistant:
         other_player_names: list[str] = []
         furthest_player_reached = False
         while True:  # TODO: Convert to for-loop?
-            other_player_name = (
-                self._get_player_name()
-            )  # TODO: Make more user-friendly?
+            other_player_name = self.textio.get_player_name(self.player_names)
             if other_player_name == current_player_name.lower():
                 self.textio.print_(
                     "The player answering the guess cannot be the same as the player making the guess.",
@@ -284,19 +282,6 @@ class TabletopGameAssistant:
             f"{crime.weapon.name.capitalize()} in the {crime.room.name.capitalize()}."
         )
         return True
-
-    def _get_player_name(self) -> str | None:
-        while True:
-            player_name = self.textio.input_(
-                f"Enter player name ({format_list(self.player_names, 'or')}): "
-            )
-            if player_name.lower() in [n.lower() for n in self.player_names]:
-                return player_name.lower()
-            else:
-                if player_name == "":
-                    return None
-                else:
-                    self.textio.print_("I don't recognize that player.", end=" ")
 
 
 def cluedo_assistant(dashboard: bool, reveal_extra_cards_first: bool = False) -> None:

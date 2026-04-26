@@ -18,6 +18,19 @@ from common.cards import (
 class TextIo:
     pause_seconds: float = 0.5
 
+    def get_player_name(self, player_names: list[str]) -> str | None:
+        # TODO: Make more user-friendly?
+        while True:
+            player_name = self.input_(
+                f"Enter player name ({format_list(player_names, 'or')}): "
+            )
+            if player_name.lower() in [n.lower() for n in player_names]:
+                return player_name.lower()
+            elif player_name == "":
+                return None
+            else:
+                self.print_("Invalid player.", end=" ")
+
     def get_rumor_card[T: Character | Weapon | Room](
         self, prompt: str, prefix: str | None = None, options: Sequence[T] = RUMORS
     ) -> T:
