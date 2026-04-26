@@ -37,15 +37,7 @@ def _get_human_player_names(textio: TextIo) -> list[str]:
         player_name = textio.input_(
             f"Player {current_player_num} name{f' (<Enter> if no player {current_player_num})' if len(player_names) >= MIN_N_PLAYERS else ''}: ",
         )
-
-        if player_name.lower() in [n.lower() for n in player_names]:
-            textio.print_("Player names must be unique.", end=" ")
-            continue
-
-        if player_name != "":
-            player_names.append(player_name)
-            current_player_num += 1
-        else:
+        if player_name is None:
             n_players = len(player_names)
             if n_players >= MIN_N_PLAYERS:
                 break
@@ -54,6 +46,13 @@ def _get_human_player_names(textio: TextIo) -> list[str]:
                     f"There must be at least {MIN_N_PLAYERS} players.", end=" "
                 )
                 continue
+        elif player_name.lower() in [n.lower() for n in player_names]:
+            textio.print_("Player names must be unique.", end=" ")
+            continue
+        else:
+            player_names.append(player_name)
+            current_player_num += 1
+            continue
 
     return player_names
 

@@ -22,11 +22,12 @@ class TextIo:
         # TODO: Make more user-friendly?
         while True:
             player_name = self.input_(
-                f"Enter player name ({format_list(player_names, 'or')}): "
+                f"Enter player name (<Enter> for no player) ({format_list(player_names, 'or')}): ",
+                lower=True,
             )
-            if player_name.lower() in [n.lower() for n in player_names]:
-                return player_name.lower()
-            elif player_name == "":
+            if player_name in [n.lower() for n in player_names]:
+                return player_name
+            elif player_name is None:
                 return None
             else:
                 self.print_("Invalid player.", end=" ")
@@ -38,8 +39,10 @@ class TextIo:
             raise ValueError
         while True:
             rumor_name = self.input_(
-                f"{prompt} ({format_list([o.name for o in options])}): ", prefix
-            ).lower()
+                f"{prompt} ({format_list([o.name for o in options])}): ",
+                prefix,
+                lower=True,
+            )
             if rumor_name in CHARACTER_NAMES:
                 rumor = Character(name=rumor_name)
             elif rumor_name in WEAPON_NAMES:
@@ -59,8 +62,8 @@ class TextIo:
         y = "Y" if default is True else "y"
         n = "N" if default is False else "n"
         while True:
-            choice = self.input_(f"{prompt} ({y}/{n}): ", prefix).lower()
-            if choice == "":
+            choice = self.input_(f"{prompt} ({y}/{n}): ", prefix, lower=True)
+            if choice is None:
                 choice = "y" if default is True else "n"
             if choice.strip() in ["y", "yes"]:
                 return True
@@ -75,12 +78,20 @@ class TextIo:
         if end == "\n":
             sleep(self.pause_seconds)
 
-    def input_(self, prompt: str, prefix: str | None = None, pause: bool = True) -> str:
+    def input_(
+        self,
+        prompt: str,
+        prefix: str | None = None,
+        pause: bool = True,
+        lower: bool = False,
+    ) -> str | None:
         self.print_(prompt, prefix, end="")
         result = input()
         if pause:
             sleep(self.pause_seconds)
-        return result
+        if lower:
+            result = result.lower()
+        return result or None
 
 
 def format_list(items: list[Any], sep: str = "or") -> str:
