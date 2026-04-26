@@ -18,18 +18,19 @@ from common.cards import (
 class TextIo:
     pause_seconds: float = 0.5
 
-    def get_player_name(self, player_names: list[str]) -> str | None:
+    def get_player_index(
+        self, player_indexes: list[int], all_player_names: list[str]
+    ) -> int | None:
         # TODO: Make more user-friendly?
         while True:
             player_name = self.input_(
-                f"Enter player name (<Enter> for no player) ({format_list(player_names, 'or')}): ",
+                f"Enter player name (<Enter> for no player) ({format_list([all_player_names[i] for i in player_indexes], 'or')}): ",
                 lower=True,
             )
-            lowercase_player_names = [n.lower() for n in player_names]
             if player_name is None:
                 return None
-            elif player_name in lowercase_player_names:
-                return player_names[lowercase_player_names.index(player_name.lower())]
+            elif player_name in [all_player_names[i].lower() for i in player_indexes]:
+                return [n.lower() for n in all_player_names].index(player_name)
             else:
                 self.print_("Invalid player.", end=" ")
 
