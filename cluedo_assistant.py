@@ -58,7 +58,7 @@ def _get_human_player_names(textio: TextIo) -> list[str]:
     return player_names
 
 
-class TabletopGameAssistant:
+class CluedoAssistant:
     def __init__(
         self,
         textio: TextIo,
@@ -290,7 +290,7 @@ def cluedo_assistant(dashboard: bool, reveal_extra_cards_first: bool = False) ->
     textio = TextIo()
     sleep(textio.pause_seconds)
     textio.print_("Initializing the Cluedo assistant...")
-    tabletop_game_assistant = TabletopGameAssistant(
+    cluedo_assistant = CluedoAssistant(
         textio=textio,
         player_names=_get_human_player_names(textio),
         reveal_extra_cards_first=reveal_extra_cards_first,
@@ -300,7 +300,7 @@ def cluedo_assistant(dashboard: bool, reveal_extra_cards_first: bool = False) ->
         "Give me information about your gameplay by answering my prompts. "
         "I will tell you what the crime was as soon as I've isolated the solution."
     )
-    tabletop_game_assistant.run(dashboard)
+    cluedo_assistant.run(dashboard)
 
 
 def main() -> None:
