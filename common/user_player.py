@@ -6,7 +6,7 @@ from common.cards import (
     Crime,
     RumorCard,
 )
-from common.textio import TextIo
+from common.io.text_io import TextIo
 
 
 @dataclasses.dataclass

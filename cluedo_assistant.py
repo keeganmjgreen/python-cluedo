@@ -17,54 +17,23 @@ from common.cards import (
     Weapon,
 )
 from common.circular_sequence import CircularSequence
-from common.consts import MIN_N_PLAYERS
 from common.dashboard import run_dashboard
+from common.io.io import AbstractIo
+from common.io.text_io import TextIo
 from common.smart_bot_agent import SmartBotObserver
-from common.textio import TextIo
 from common.utils import print_logo
 
 N_SAMPLES_FOR_PROBABILITY = 10
 
 
-def _get_human_player_names(textio: TextIo) -> list[str]:
-    textio.print_(
-        "Please provide the player names in turn order, beginning with the starting player."
-    )
-    current_player_num = 1
-    player_names: list[str] = []
-
-    while True:
-        player_name = textio.input_(
-            f"Player {current_player_num} name{f' (<Enter> if no player {current_player_num})' if len(player_names) >= MIN_N_PLAYERS else ''}: ",
-        )
-        if player_name is None:
-            n_players = len(player_names)
-            if n_players >= MIN_N_PLAYERS:
-                break
-            else:
-                textio.print_(
-                    f"There must be at least {MIN_N_PLAYERS} players.", end=" "
-                )
-                continue
-        elif player_name.lower() in [n.lower() for n in player_names]:
-            textio.print_("Player names must be unique.", end=" ")
-            continue
-        else:
-            player_names.append(player_name)
-            current_player_num += 1
-            continue
-
-    return player_names
-
-
 class CluedoAssistant:
     def __init__(
         self,
-        textio: TextIo,
+        io: AbstractIo,
         player_names: list[str],
         reveal_extra_cards_first: bool = False,
     ) -> None:
-        self.textio = textio
+        self.io = io
         self.player_names = player_names
         self.reveal_extra_cards_first = reveal_extra_cards_first
         self.player_indices = list(range(len(self.player_names)))
@@ -106,14 +75,14 @@ class CluedoAssistant:
                         )
 
     def _get_extra_cards(self) -> list[RumorCard]:
-        self.textio.print_("Look at the extra cards.")
-        self.textio.print_("What are they?")
+        self.io.print_("Look at the extra cards.")
+        self.io.print_("What are they?")
         extra_cards = []
         # TODO: Select from list narrowed down by observer.
         options = RUMORS
         extra_cards: list[RumorCard] = []
         for i in range(self.n_extra_cards):
-            extra_card = self.textio.get_rumor_card(
+            extra_card = self.io.get_rumor_card(
                 prompt=f"Enter extra card #{i + 1}/{self.n_extra_cards}",
                 options=options,
             )
@@ -122,26 +91,24 @@ class CluedoAssistant:
         return extra_cards
 
     def _run_turn(self, current_player_name: str) -> bool:
-        self.textio.print_(f"It's {current_player_name}'s turn.")
+        self.io.print_(f"It's {current_player_name}'s turn.")
 
         guess = self._get_guess(current_player_name)
         self.observer.add_game_log_entry(turn_index=self.turn_index, guess=guess)
 
-        self.textio.print_(
-            "Who gave evidence that the suspect, weapon, or room was wrong?"
-        )
+        self.io.print_("Who gave evidence that the suspect, weapon, or room was wrong?")
         return self.collect_responses(current_player_name)
 
     def _get_guess(self, current_player_name: str) -> Crime:
-        character = self.textio.get_rumor_card(
+        character = self.io.get_rumor_card(
             prompt=f"Which character does {current_player_name} say killed the host?",
             options=Character.instances(),
         )
-        weapon = self.textio.get_rumor_card(
+        weapon = self.io.get_rumor_card(
             prompt=f"What weapon does {current_player_name} say was used?",
             options=Weapon.instances(),
         )
-        room = self.textio.get_rumor_card(
+        room = self.io.get_rumor_card(
             prompt=f"Which room does {current_player_name} say the murder took place in?",
             options=Room.instances(),
         )
@@ -163,7 +130,7 @@ class CluedoAssistant:
         )
         farthest_player_reached = False
         while sum(len(choices) for choices in choiceset) > 0:
-            respondent_index = self.textio.get_player_index(
+            respondent_index = self.io.get_player_index(
                 player_indexes=sorted({c for choices in choiceset for c in choices}),
                 all_player_names=self.player_names,
             )
@@ -220,29 +187,29 @@ class CluedoAssistant:
         crime = self.observer.try_solving_crime()
         if crime is None:
             return False
-        self.textio.print_("The Cluedo assistant has solved the case!")
-        self.textio.print_(
+        self.io.print_("The Cluedo assistant has solved the case!")
+        self.io.print_(
             f"The host was killed by {crime.character.name.capitalize()} with the "
             f"{crime.weapon.name.capitalize()} in the {crime.room.name.capitalize()}."
         )
         return True
 
 
-def cluedo_assistant(dashboard: bool, reveal_extra_cards_first: bool = False) -> None:
-    print()
-    print_logo()
-    textio = TextIo()
-    sleep(textio.pause_seconds)
-    textio.print_("Initializing the Cluedo assistant...")
+def cluedo_assistant(
+    io: AbstractIo, dashboard: bool = False, reveal_extra_cards_first: bool = False
+) -> None:
+    if isinstance(io, TextIo):
+        os.system("cls" if os.name == "nt" else "clear")
+        print()
+        print_logo()
+        sleep(io.pause_seconds)
+    io.print_("Welcome to the Cluedo assistant!")
+    io.print_("Give me information about your gameplay by answering my prompts.")
+    io.print_("I'll tell you what the crime was as soon as I've isolated the solution.")
     cluedo_assistant = CluedoAssistant(
-        textio=textio,
-        player_names=_get_human_player_names(textio),
+        io=io,
+        player_names=io.get_human_player_names(),
         reveal_extra_cards_first=reveal_extra_cards_first,
-    )
-    textio.print_("Running the Cluedo assistant...")
-    textio.print_(
-        "Give me information about your gameplay by answering my prompts. "
-        "I will tell you what the crime was as soon as I've isolated the solution."
     )
     cluedo_assistant.run(dashboard)
 
@@ -254,6 +221,7 @@ def main() -> None:
     else:
         dashboard_thread = None
     cluedo_assistant(
+        io=TextIo(),
         dashboard=cli_settings.dashboard,
         reveal_extra_cards_first=cli_settings.reveal_extra_cards_first,
     )
@@ -273,5 +241,4 @@ class _CliSettings(BaseSettings):
 
 
 if __name__ == "__main__":
-    os.system("cls" if os.name == "nt" else "clear")
     main()

@@ -1,7 +1,7 @@
 import dataclasses
 from collections.abc import Sequence
 from time import sleep
-from typing import Any, cast
+from typing import cast
 
 from common.cards import (
     CHARACTER_NAMES,
@@ -12,11 +12,43 @@ from common.cards import (
     Room,
     Weapon,
 )
+from common.consts import MIN_N_PLAYERS
+from common.io.io import format_list
 
 
 @dataclasses.dataclass
 class TextIo:
     pause_seconds: float = 0.5
+
+    def get_human_player_names(self) -> list[str]:
+        self.print_(
+            "Please provide the player names in turn order, beginning with the starting player."
+        )
+        current_player_num = 1
+        player_names: list[str] = []
+
+        while True:
+            player_name = self.input_(
+                f"Player {current_player_num} name{f' (<Enter> if no player {current_player_num})' if len(player_names) >= MIN_N_PLAYERS else ''}: ",
+            )
+            if player_name is None:
+                n_players = len(player_names)
+                if n_players >= MIN_N_PLAYERS:
+                    break
+                else:
+                    self.print_(
+                        f"There must be at least {MIN_N_PLAYERS} players.", end=" "
+                    )
+                    continue
+            elif player_name.lower() in [n.lower() for n in player_names]:
+                self.print_("Player names must be unique.", end=" ")
+                continue
+            else:
+                player_names.append(player_name)
+                current_player_num += 1
+                continue
+
+        return player_names
 
     def get_player_index(
         self, player_indexes: list[int], all_player_names: list[str]
@@ -94,11 +126,3 @@ class TextIo:
         if lower:
             result = result.lower()
         return result or None
-
-
-def format_list(items: list[Any], sep: str = "or") -> str:
-    if len(items) == 1:
-        return f"{items[0]}"
-    if len(items) == 2:
-        return f"{items[0]} {sep} {items[1]}"
-    return ", ".join(items[:-1]) + f", {sep} " + items[-1]

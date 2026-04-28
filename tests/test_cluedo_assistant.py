@@ -238,7 +238,7 @@ def test_collect_responses(case: Case) -> None:
     textio.input_ = lambda: ""
 
     assistant = CluedoAssistant(
-        textio=textio, player_names=[f"Player {i}" for i in range(case.n_players)]
+        io=textio, player_names=[f"Player {i}" for i in range(case.n_players)]
     )
     assistant.turn_index = 1
     guess = Crime(Character("plum"), Weapon("ax"), Room("spa"))
