@@ -18,8 +18,10 @@
         "pytest",
         "satisfiability",
         "scriptsize",
+        "socketio",
         "Tseitin",
         "unsubmitted",
+        "uvicorn",
         "vpool",
         "xaxes",
         "yaxes"
