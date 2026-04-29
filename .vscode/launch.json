@@ -11,8 +11,7 @@
             "program": "cluedo_simulator.py",
             "console": "integratedTerminal",
             "args": [
-                "--n-bot-players=4",
-                "--artifacting-id=0"
+                "--n-bot-players=4"
             ]
         }
     ]
