@@ -1,0 +1,5 @@
+.players-entry-table {
+    display: grid;
+    grid-template-columns: max-content max-content max-content;
+    gap: 5px;
+}

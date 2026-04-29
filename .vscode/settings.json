@@ -13,6 +13,7 @@
         "numpy",
         "pblib",
         "plotly",
+        "pycache",
         "pydantic",
         "pysat",
         "pytest",
