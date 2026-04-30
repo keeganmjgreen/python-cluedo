@@ -1,6 +1,7 @@
 :root {
     /* The following variables are overridden in dark mode. */
     --background-color: #f0f0f0;
+    --intense-background-color: white;
     --text-color: #202020;
     --text-highlight-color: black;
 }
@@ -8,6 +9,7 @@
 @media (prefers-color-scheme: dark) {
     :root {
         --background-color: #1b1917;
+        --intense-background-color: black;
         --text-color: #c0c0c0;
         --text-highlight-color: white;
     }
@@ -22,8 +24,8 @@ html {
 }
 
 body {
-    max-width: 550px;
-    margin: 50px;
+    max-width: 750px;
+    overflow: hidden;
 }
 
 .container {
@@ -36,8 +38,7 @@ body {
 .container .left {
     flex: 1 0 100px;
     min-width: 100px;
-    /* Margin between the two columns. */
-    margin-right: 25px;
+    padding: 50px;
 }
 
 .container .left h1 {
@@ -47,6 +48,11 @@ body {
 .container .right {
     flex: 1 0 310px;
     min-width: 310px;
+    height: 100vh;
+    box-sizing: border-box;
+    padding: 50px;
+    overflow: scroll;
+    background-color: var(--intense-background-color);
 }
 
 .players-entry-table {
