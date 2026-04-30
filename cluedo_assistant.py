@@ -65,6 +65,7 @@ class CluedoAssistant:
                 if self._run_turn(current_player_name=player_name):
                     return
                 if self.n_extra_cards != 0 and not self.reveal_extra_cards_first:
+                    # TODO: Move into `_run_turn`.
                     observer_must_see_extra_cards = self.observer.must_see_extra_cards(
                         turn_index=self.turn_index
                     )
@@ -73,6 +74,10 @@ class CluedoAssistant:
                             turn_index=self.turn_index,
                             rumor_cards=self._get_extra_cards(),
                         )
+                        solved = self._try_solving_crime()
+                        if not solved:
+                            self.io.print_("An unexpected error occurred.")
+                        return
 
     def _get_extra_cards(self) -> list[RumorCard]:
         self.io.print_("Look at the extra cards.")
