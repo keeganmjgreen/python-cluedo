@@ -1,5 +1,116 @@
+:root {
+    /* The following variables are overridden in dark mode. */
+    --background-color: #f0f0f0;
+    --text-color: #202020;
+    --text-highlight-color: black;
+}
+
+@media (prefers-color-scheme: dark) {
+    :root {
+        --background-color: #1b1917;
+        --text-color: #c0c0c0;
+        --text-highlight-color: white;
+    }
+}
+
+html {
+    background-color: var(--background-color);
+    color: var(--text-color);
+    font-family: 'Gentium Plus', 'Times New Roman', serif;
+    display: flex;
+    justify-content: center;
+}
+
+body {
+    max-width: 550px;
+    margin: 50px;
+}
+
+.container {
+    display: flex;
+    /* Flex wrap switches from two-column to single-column layout on narrow screens
+    (e.g. on mobile). */
+    flex-wrap: wrap;
+}
+
+.container .left {
+    flex: 1 0 100px;
+    min-width: 100px;
+    /* Margin between the two columns. */
+    margin-right: 25px;
+}
+
+.container .left h1 {
+    line-height: 125%;
+}
+
+.container .right {
+    flex: 1 0 310px;
+    min-width: 310px;
+}
+
 .players-entry-table {
     display: grid;
-    grid-template-columns: max-content max-content max-content;
-    gap: 5px;
+    grid-template-columns: max-content max-content;
+}
+
+.players-entry-table .player-name-input,
+.players-entry-table .player-name-input-deselected,
+.players-entry-table .player-name-remove-button,
+.text-button,
+.text-button-selected,
+.text-button-deselected {
+    margin-right: 5px;
+    margin-bottom: 5px;
+    border-radius: 17.5px;
+    padding-top: 10px;
+    padding-bottom: 10px;
+    border: none;
+    /* 25% translucent gray background color for similar effect in dark/light mode. */
+    background-color: #80808040;
+    color: var(--text-color);
+}
+
+.players-entry-table .player-name-input,
+.players-entry-table .player-name-input-deselected,
+.text-button,
+.text-button-selected,
+.text-button-deselected {
+    padding-left: 15px;
+    padding-right: 15px;
+}
+
+.players-entry-table .player-name-input:enabled:hover,
+.players-entry-table .player-name-remove-button:enabled:hover,
+.text-button:enabled:hover {
+    background-color: #80808080;
+    color: var(--text-highlight-color);
+}
+
+.players-entry-table .player-name-input-deselected,
+.text-button-deselected {
+    /* 12.5% translucent gray background color for similar effect in dark/light mode. */
+    background-color: #80808020;
+}
+
+.players-entry-table .player-name-remove-button {
+    height: 35px;
+    width: 35px;
+    text-align: center;
+}
+
+.text-button,
+.text-button-selected,
+.text-button-deselected {
+    height: 35px;
+    padding-top: 8px;
+    padding-bottom: 12px;
+    text-transform: capitalize;
+    /* Switching from no border to a 1px border nudges the layout.
+    A 1px transparent border instead of no border prevents this. */
+    border: 1px solid #00000000;
+}
+
+.text-button-selected {
+    border: 1px solid var(--text-color);
 }

@@ -80,9 +80,11 @@ function App() {
   };
 
   return (
-    <div>
-      <h1>Cluedo Web Solver</h1>
-      <div>
+    <div className="container">
+      <div className="left">
+        <h1>Cluedo Web Solver</h1>
+      </div>
+      <div className="right">
         {messages.map((message, messageIndex) => (
           <div key={messageIndex}>
             <p>{message.text}</p>
@@ -138,15 +140,12 @@ function PlayerNamesEntryForm({ onSubmit }: PlayerNamesEntryFormProps) {
 
   for (const [index, playerName] of playerNames.entries()) {
     divs.push(
-      <div>
-        {disabled || index !== playerNames.length - 1
-          ? `Player ${index + 1}:`
-          : "Add a player:"}
-      </div>,
-    );
-    divs.push(
       <input
+        className={
+          disabled ? "player-name-input-deselected" : "player-name-input"
+        }
         type="text"
+        placeholder="Enter player name"
         value={playerName}
         key={index}
         onChange={(e) => {
@@ -165,12 +164,13 @@ function PlayerNamesEntryForm({ onSubmit }: PlayerNamesEntryFormProps) {
     if (!disabled && index !== playerNames.length - 1) {
       const removeButton = (
         <button
+          className="player-name-remove-button"
           onClick={() => {
             setPlayerNames(playerNames.filter((_, i) => i !== index));
           }}
           disabled={disabled}
         >
-          Remove
+          ❌
         </button>
       );
       divs.push(removeButton);
@@ -180,8 +180,8 @@ function PlayerNamesEntryForm({ onSubmit }: PlayerNamesEntryFormProps) {
   }
 
   const doneButton = (
-    <button onClick={handleSubmit} disabled={disabled}>
-      Submit
+    <button className="text-button" onClick={handleSubmit} disabled={disabled}>
+      Start Game
     </button>
   );
 
@@ -219,11 +219,19 @@ function ChoiceEntryForm({
   return (
     <div>
       {newOptions.map((option) => {
-        const label = option ?? "No Player";
-        const newLabel = selected === option ? <b>{label}</b> : label;
         return (
-          <button onClick={() => handleSubmit(option)} disabled={disabled}>
-            {newLabel}
+          <button
+            className={
+              disabled
+                ? option === selected
+                  ? "text-button-selected"
+                  : "text-button-deselected"
+                : "text-button"
+            }
+            onClick={() => handleSubmit(option)}
+            disabled={disabled}
+          >
+            {option ?? "No Player"}
           </button>
         );
       })}
