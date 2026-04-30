@@ -2,43 +2,37 @@
     /* The following variables are overridden in dark mode. */
     --background-color: #f0f0f0;
     --intense-background-color: white;
-    --text-color: #202020;
-    --text-highlight-color: black;
+    --foreground-color: #202020;
+    --intense-foreground-color: black;
 }
 
 @media (prefers-color-scheme: dark) {
     :root {
         --background-color: #1b1917;
         --intense-background-color: black;
-        --text-color: #c0c0c0;
-        --text-highlight-color: white;
+        --foreground-color: #c0c0c0;
+        --intense-foreground-color: white;
     }
 }
 
-html {
+html,
+body {
     background-color: var(--background-color);
-    color: var(--text-color);
+    color: var(--foreground-color);
     font-family: 'Gentium Plus', 'Times New Roman', serif;
-    display: flex;
-    justify-content: center;
+    margin: 0;
+    height: 100%;
 }
 
-body {
-    max-width: 750px;
-    overflow: hidden;
-}
 
 .container {
     display: flex;
-    /* Flex wrap switches from two-column to single-column layout on narrow screens
-    (e.g. on mobile). */
-    flex-wrap: wrap;
 }
 
-.container .left {
-    flex: 1 0 100px;
-    min-width: 100px;
+.container .left,
+.container .right {
     padding: 50px;
+    box-sizing: border-box;
 }
 
 .container .left h1 {
@@ -46,13 +40,47 @@ body {
 }
 
 .container .right {
-    flex: 1 0 310px;
-    min-width: 310px;
-    height: 100vh;
-    box-sizing: border-box;
-    padding: 50px;
-    overflow: scroll;
     background-color: var(--intense-background-color);
+}
+
+/* Two-column layout on desktop. */
+@media (min-width: 610px) {
+    .container {
+        height: 100vh;
+        max-width: 1000px;
+        /* Center horizontally. */
+        margin: 0 auto;
+        flex-direction: row;
+    }
+
+    .container .left {
+        flex: 1 0 100px;
+    }
+
+    .container .right {
+        flex: 1 0 310px;
+        /* Right column is a scroll region. */
+        overflow: scroll;
+    }
+}
+
+/* Stacked layout on narrow screens (e.g. mobile). */
+@media (max-width: 610px) {
+    .container {
+        flex-direction: column;
+        /* Entire page as one scroll region. */
+        overflow: scroll;
+    }
+
+    .container .left {
+        /* Vertically fit content. */
+        flex: 0 0 content;
+    }
+
+    .container .right {
+        /* Fill remaining vertical space. */
+        flex: 1;
+    }
 }
 
 .players-entry-table {
@@ -74,7 +102,7 @@ body {
     border: none;
     /* 25% translucent gray background color for similar effect in dark/light mode. */
     background-color: #80808040;
-    color: var(--text-color);
+    color: var(--foreground-color);
 }
 
 .players-entry-table .player-name-input,
@@ -90,7 +118,7 @@ body {
 .players-entry-table .player-name-remove-button:enabled:hover,
 .text-button:enabled:hover {
     background-color: #80808080;
-    color: var(--text-highlight-color);
+    color: var(--intense-foreground-color);
 }
 
 .players-entry-table .player-name-input-deselected,
@@ -118,5 +146,5 @@ body {
 }
 
 .text-button-selected {
-    border: 1px solid var(--text-color);
+    border: 1px solid var(--foreground-color);
 }
