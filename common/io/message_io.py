@@ -66,21 +66,6 @@ class MessageIo:
         response = _PlayerNamesEntryResponse.model_validate(self.receive_queue.get())
         return response.player_names
 
-    def get_player_index(
-        self, player_indexes: list[int], all_player_names: list[str]
-    ) -> int | None:
-        options = [all_player_names[i] for i in player_indexes]
-        self.send_queue.put(
-            _ChoiceEntryRequest(options=options, optional=True).model_dump()
-        )
-        response = _OptionalChoiceEntryResponse.model_validate(self.receive_queue.get())
-        player_name = response.value
-        if player_name is None:
-            return None
-        elif player_name not in all_player_names:
-            raise ValueError("Invalid player name")
-        return all_player_names.index(player_name)
-
     def get_rumor_card[T: Character | Weapon | Room](
         self, prompt: str, prefix: str | None = None, options: Sequence[T] = RUMORS
     ) -> T:
@@ -106,6 +91,21 @@ class MessageIo:
         if rumor in options:
             return cast(T, rumor)
         raise ValueError("Invalid option")
+
+    def get_player_index(
+        self, player_indexes: list[int], all_player_names: list[str]
+    ) -> int | None:
+        options = [all_player_names[i] for i in player_indexes]
+        self.send_queue.put(
+            _ChoiceEntryRequest(options=options, optional=True).model_dump()
+        )
+        response = _OptionalChoiceEntryResponse.model_validate(self.receive_queue.get())
+        player_name = response.value
+        if player_name is None:
+            return None
+        elif player_name not in all_player_names:
+            raise ValueError("Invalid player name")
+        return all_player_names.index(player_name)
 
     def print_(self, msg: str, prefix: str | None = None, end: str = "\n") -> None:
         if prefix is not None:

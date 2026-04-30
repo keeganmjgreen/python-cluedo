@@ -7,13 +7,13 @@ from common.cards import RUMORS, Character, Room, Weapon
 class AbstractIo(Protocol):
     def get_human_player_names(self) -> list[str]: ...
 
-    def get_player_index(
-        self, player_indexes: list[int], all_player_names: list[str]
-    ) -> int | None: ...
-
     def get_rumor_card[T: Character | Weapon | Room](
         self, prompt: str, prefix: str | None = None, options: Sequence[T] = RUMORS
     ) -> T: ...
+
+    def get_player_index(
+        self, player_indexes: list[int], all_player_names: list[str]
+    ) -> int | None: ...
 
     def print_(self, msg: str, prefix: str | None = None, end: str = "\n") -> None: ...
 

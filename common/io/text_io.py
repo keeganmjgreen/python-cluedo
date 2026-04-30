@@ -50,22 +50,6 @@ class TextIo:
 
         return player_names
 
-    def get_player_index(
-        self, player_indexes: list[int], all_player_names: list[str]
-    ) -> int | None:
-        # TODO: Make more user-friendly?
-        while True:
-            player_name = self.input_(
-                f"Enter player name (<Enter> for no player) ({format_list([all_player_names[i] for i in player_indexes], 'or')}): ",
-                lower=True,
-            )
-            if player_name is None:
-                return None
-            elif player_name in [all_player_names[i].lower() for i in player_indexes]:
-                return [n.lower() for n in all_player_names].index(player_name)
-            else:
-                self.print_("Invalid player.", end=" ")
-
     def get_rumor_card[T: Character | Weapon | Room](
         self, prompt: str, prefix: str | None = None, options: Sequence[T] = RUMORS
     ) -> T:
@@ -89,6 +73,22 @@ class TextIo:
             if rumor in options:
                 return cast(T, rumor)
             self.print_("Invalid rumor.", prefix, end=" ")
+
+    def get_player_index(
+        self, player_indexes: list[int], all_player_names: list[str]
+    ) -> int | None:
+        # TODO: Make more user-friendly?
+        while True:
+            player_name = self.input_(
+                f"Enter player name (<Enter> for no player) ({format_list([all_player_names[i] for i in player_indexes], 'or')}): ",
+                lower=True,
+            )
+            if player_name is None:
+                return None
+            elif player_name in [all_player_names[i].lower() for i in player_indexes]:
+                return [n.lower() for n in all_player_names].index(player_name)
+            else:
+                self.print_("Invalid player.", end=" ")
 
     def get_yes_or_no(
         self, prompt: str, prefix: str | None = None, default: bool | None = None
