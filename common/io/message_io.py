@@ -73,7 +73,7 @@ class MessageIo:
 
     def announce_turn(self, turn_index: int, player_name: str) -> None:
         self.send_queue.put(
-            _Banner(text=f"Turn {turn_index}: {player_name}").model_dump()
+            _Banner(text=f"Turn {turn_index}: {player_name.capitalize()}").model_dump()
         )
 
     def get_rumor_card[T: Character | Weapon | Room](
