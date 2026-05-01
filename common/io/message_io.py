@@ -35,6 +35,11 @@ class _PlayerNamesEntryResponse(BaseModel):
     player_names: list[str]
 
 
+class _Banner(BaseModel):
+    type: Literal["banner"] = "banner"
+    text: str
+
+
 class _ChoiceEntryRequest(BaseModel):
     type: Literal["choice_entry_request"] = "choice_entry_request"
     text: str = ""
@@ -65,6 +70,11 @@ class MessageIo:
         self.send_queue.put(request.model_dump())
         response = _PlayerNamesEntryResponse.model_validate(self.receive_queue.get())
         return response.player_names
+
+    def announce_turn(self, turn_index: int, player_name: str) -> None:
+        self.send_queue.put(
+            _Banner(text=f"Turn {turn_index}: {player_name}").model_dump()
+        )
 
     def get_rumor_card[T: Character | Weapon | Room](
         self, prompt: str, prefix: str | None = None, options: Sequence[T] = RUMORS

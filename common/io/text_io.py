@@ -50,6 +50,9 @@ class TextIo:
 
         return player_names
 
+    def announce_turn(self, turn_index: int, player_name: str) -> None:
+        self.print_(f"It's {player_name}'s turn.")
+
     def get_rumor_card[T: Character | Weapon | Room](
         self, prompt: str, prefix: str | None = None, options: Sequence[T] = RUMORS
     ) -> T:
