@@ -13,6 +13,11 @@ const PlayerNamesEntryRequest = z.object({
   text: z.string(),
 });
 
+const Banner = z.object({
+  type: z.literal("banner"),
+  text: z.string(),
+});
+
 const ChoiceEntryRequest = z.object({
   type: z.literal("choice_entry_request"),
   text: z.string(),
@@ -23,6 +28,7 @@ const ChoiceEntryRequest = z.object({
 const Message = z.union([
   PlainMessage,
   PlayerNamesEntryRequest,
+  Banner,
   ChoiceEntryRequest,
 ]);
 type MessageType = z.infer<typeof Message>;
@@ -87,16 +93,23 @@ function App() {
       <div className="right">
         {messages.map((message, messageIndex) => (
           <div key={messageIndex}>
-            <p>{message.text}</p>
+            {message.type === "plain_message" && <p>{message.text}</p>}
             {message.type === "player_names_entry_request" && (
-              <PlayerNamesEntryForm onSubmit={handlePlayerNamesEntry} />
+              <>
+                <p>{message.text}</p>
+                <PlayerNamesEntryForm onSubmit={handlePlayerNamesEntry} />
+              </>
             )}
+            {message.type === "banner" && <h2>{message.text}</h2>}
             {message.type === "choice_entry_request" && (
-              <ChoiceEntryForm
-                options={message.options}
-                optional={message.optional}
-                onSubmit={handleChoiceEntry}
-              />
+              <>
+                <p>{message.text}</p>
+                <ChoiceEntryForm
+                  options={message.options}
+                  optional={message.optional}
+                  onSubmit={handleChoiceEntry}
+                />
+              </>
             )}
           </div>
         ))}

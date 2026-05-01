@@ -43,6 +43,11 @@ body {
     background-color: var(--intense-background-color);
 }
 
+.container .right h2 {
+    border-top: 1px solid #80808080;
+    padding-top: 10px;
+}
+
 /* Two-column layout on desktop. */
 @media (min-width: 610px) {
     .container {

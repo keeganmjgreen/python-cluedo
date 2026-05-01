@@ -96,7 +96,7 @@ class CluedoAssistant:
         return extra_cards
 
     def _run_turn(self, current_player_name: str) -> bool:
-        self.io.print_(f"It's {current_player_name}'s turn.")
+        self.io.announce_turn(self.turn_index, current_player_name)
 
         guess = self._get_guess(current_player_name)
         self.observer.add_game_log_entry(turn_index=self.turn_index, guess=guess)
