@@ -25,6 +25,10 @@ body {
 }
 
 
+.link {
+    color: var(--intense-foreground-color);
+}
+
 .container {
     display: flex;
 }
@@ -49,7 +53,7 @@ body {
 }
 
 /* Two-column layout on desktop. */
-@media (min-width: 610px) {
+@media (min-width: 660px) {
     .container {
         height: 100vh;
         max-width: 1000px;
@@ -59,7 +63,7 @@ body {
     }
 
     .container .left {
-        flex: 1 0 100px;
+        flex: 1 0 150px;
     }
 
     .container .right {
@@ -70,7 +74,7 @@ body {
 }
 
 /* Stacked layout on narrow screens (e.g. mobile). */
-@media (max-width: 610px) {
+@media (max-width: 660px) {
     .container {
         flex-direction: column;
         /* Entire page as one scroll region. */
