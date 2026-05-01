@@ -89,6 +89,21 @@ function App() {
     <div className="container">
       <div className="left">
         <h1>Cluedo Web Solver</h1>
+        <p>
+          Beat your friends and family at the classic board game Cluedo (Clue in
+          North America). Enter your gameplay to a boolean satisfiability solver
+          and let it solve the crime for you faster than your opponents.
+        </p>
+        <p>
+          Learn more about how it works{" "}
+          <a
+            className="link"
+            href="https://keeganmjgreen.github.io/blog/readme/"
+          >
+            here
+          </a>
+          .
+        </p>
       </div>
       <div className="right">
         {messages.map((message, messageIndex) => (
