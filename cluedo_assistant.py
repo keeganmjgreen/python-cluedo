@@ -106,15 +106,15 @@ class CluedoAssistant:
 
     def _get_guess(self, current_player_name: str) -> Crime:
         character = self.io.get_rumor_card(
-            prompt=f"Which character does {current_player_name} say killed the host?",
+            prompt=f"Which character does {current_player_name.capitalize()} say killed the host?",
             options=Character.instances(),
         )
         weapon = self.io.get_rumor_card(
-            prompt=f"What weapon does {current_player_name} say was used?",
+            prompt=f"What weapon does {current_player_name.capitalize()} say was used?",
             options=Weapon.instances(),
         )
         room = self.io.get_rumor_card(
-            prompt=f"Which room does {current_player_name} say the murder took place in?",
+            prompt=f"Which room does {current_player_name.capitalize()} say the murder took place in?",
             options=Room.instances(),
         )
         return Crime(character=character, weapon=weapon, room=room)
