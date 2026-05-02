@@ -49,7 +49,7 @@ class BaseAgent(abc.ABC):
     def __str__(self) -> str:
         return f"{self.agent_index} - {self.__class__.__name__}"
 
-    def add_game_log_entry(self, turn_index: int, guess: Crime) -> None:
+    def add_game_log_entry(self, turn_index: int, guess: Crime | None = None) -> None:
         self.game_log.append(GameLogEntry(turn_index, guess))
 
     def sees_card(
