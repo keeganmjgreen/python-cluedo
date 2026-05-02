@@ -11,18 +11,16 @@ from common.cards import (
     Weapon,
     parse_rumor,
 )
-from common.consts import MIN_N_PLAYERS
-from common.io.io import format_list
+from common.consts import MIN_N_PLAYERS, GameVariant
+from common.io.io import AbstractIo, format_list
 
 
 @dataclasses.dataclass
-class TextIo:
+class TextIo(AbstractIo):
     pause_seconds: float = 0.5
 
     def get_human_player_names(self) -> list[str]:
-        self.print_(
-            "Please provide the player names in turn order, beginning with the starting player."
-        )
+        self.print_(self._PLAYER_NAMES_PROMPT)
         current_player_num = 1
         player_names: list[str] = []
 
@@ -77,6 +75,26 @@ class TextIo:
             extra_cards.append(extra_card)
             options = [o for o in options if o != extra_card]
         return extra_cards
+
+    def get_game_variant(self) -> GameVariant:
+        options = [gv.value for gv in GameVariant]
+        while True:
+            option = self.input_(
+                f"{self._GAME_VARIANT_PROMPT} "
+                f"({format_list([f'{i + 1} = {o}' for i, o in enumerate(options)])}): "
+            )
+            if option is None:
+                self.print_("Invalid number.", end=" ")
+                continue
+            try:
+                number = int(option)
+            except ValueError:
+                self.print_("Invalid number.", end=" ")
+                continue
+            if number < 1 or number > len(options):
+                self.print_("Invalid number.", end=" ")
+                continue
+            return GameVariant(options[number - 1])
 
     def announce_turn(self, turn_index: int, player_name: str) -> None:
         self.print_(f"It's {player_name.capitalize()}'s turn.")

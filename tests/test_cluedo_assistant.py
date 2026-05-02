@@ -7,6 +7,7 @@ import pytest
 from cluedo_assistant import CluedoAssistant
 from common.agent_utils import CardReveal, UnknownRumor
 from common.cards import Character, Crime, Room, Weapon
+from common.consts import GameVariant
 
 
 @dataclasses.dataclass
@@ -234,6 +235,7 @@ def test_collect_responses(case: Case) -> None:
         return player_index
 
     textio.get_yes_or_no = lambda prompt: False  # type: ignore
+    textio.get_game_variant = lambda: GameVariant.BOTH_SIDES_REVEAL
     textio.get_player_index = get_player_index
     textio.print_ = lambda: None
     textio.input_ = lambda: ""

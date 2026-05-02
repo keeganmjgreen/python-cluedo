@@ -14,6 +14,8 @@ from common.cards import (
     Weapon,
     parse_rumor,
 )
+from common.consts import GameVariant
+from common.io.io import AbstractIo
 
 
 class BaseModel(pydantic.BaseModel):
@@ -69,17 +71,12 @@ class _MultiChoiceEntryResponse(BaseModel):
 
 
 @dataclasses.dataclass
-class MessageIo:
+class MessageIo(AbstractIo):
     send_queue: queue.Queue[dict[str, Any]]
     receive_queue: queue.Queue[dict[str, Any]]
 
     def get_human_player_names(self) -> list[str]:
-        request = _PlayerNamesEntryRequest(
-            text=(
-                "Please provide the player names in turn order, "
-                "beginning with the starting player."
-            )
-        )
+        request = _PlayerNamesEntryRequest(text=self._PLAYER_NAMES_PROMPT)
         self.send_queue.put(request.model_dump())
         response = _PlayerNamesEntryResponse.model_validate(self.receive_queue.get())
         return response.player_names
@@ -117,6 +114,17 @@ class MessageIo:
                 raise ValueError
             extra_cards.append(rumor_card)
         return extra_cards
+
+    def get_game_variant(self) -> GameVariant:
+        self.send_queue.put(
+            _ChoiceEntryRequest(
+                text=self._GAME_VARIANT_PROMPT,
+                options=[gv.value for gv in GameVariant],
+                optional=False,
+            ).model_dump()
+        )
+        response = _RequiredChoiceEntryResponse.model_validate(self.receive_queue.get())
+        return GameVariant(response.value)
 
     def announce_turn(self, turn_index: int, player_name: str) -> None:
         self.send_queue.put(
