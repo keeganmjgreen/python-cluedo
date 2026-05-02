@@ -20,7 +20,7 @@ from common.consts import GameVariant
 from common.dashboard import run_dashboard
 from common.io.io import AbstractIo
 from common.io.text_io import TextIo
-from common.smart_bot_agent import SmartBotObserver
+from common.smart_bot_agent import SmartBotObserver, UnsolvableError
 from common.utils import print_logo
 
 N_SAMPLES_FOR_PROBABILITY = 10
@@ -227,7 +227,14 @@ def cluedo_assistant(io: AbstractIo, dashboard: bool = False) -> None:
     io.print_("I'll tell you what the crime was as soon as I've isolated the solution.")
     player_names = io.get_human_player_names()
     cluedo_assistant = CluedoAssistant(io=io, player_names=player_names)
-    cluedo_assistant.run(dashboard)
+    try:
+        cluedo_assistant.run(dashboard)
+    except UnsolvableError:
+        io.print_(
+            "Based on the information you've entered during the gameplay, "
+            "the crime is unsolvable. "
+            "You likely entered a rumor or player response incorrectly."
+        )
 
 
 def main() -> None:
