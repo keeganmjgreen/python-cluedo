@@ -25,11 +25,19 @@ const ChoiceEntryRequest = z.object({
   optional: z.boolean(),
 });
 
+const MultiChoiceEntryRequest = z.object({
+  type: z.literal("multi_choice_entry_request"),
+  text: z.string(),
+  options: z.array(z.string()),
+  numSelections: z.int(),
+});
+
 const Message = z.union([
   PlainMessage,
   PlayerNamesEntryRequest,
   Banner,
   ChoiceEntryRequest,
+  MultiChoiceEntryRequest,
 ]);
 type MessageType = z.infer<typeof Message>;
 
@@ -83,6 +91,12 @@ function App() {
       setLoading(true);
     }
   };
+  const handleMultiChoiceEntry = (values: Array<string>) => {
+    if (socket) {
+      socket.emit("user_input", { values: values });
+      setLoading(true);
+    }
+  };
 
   return (
     <div className="container">
@@ -125,6 +139,16 @@ function App() {
                 />
               </>
             )}
+            {message.type === "multi_choice_entry_request" && (
+              <>
+                <p>{message.text}</p>
+                <MultiChoiceEntryForm
+                  options={message.options}
+                  numSelections={message.numSelections}
+                  onSubmit={handleMultiChoiceEntry}
+                />
+              </>
+            )}
           </div>
         ))}
         {loading && <p>Waiting for server...</p>}
@@ -139,9 +163,9 @@ interface PlayerNamesEntryFormProps {
 }
 
 function PlayerNamesEntryForm({ onSubmit }: PlayerNamesEntryFormProps) {
-  const [disabled, setDisabled] = useState(false);
   const [playerNames, setPlayerNames] = useState([""]);
   const [admonition, setAdmonition] = useState("");
+  const [disabled, setDisabled] = useState(false);
 
   const handleSubmit = () => {
     for (const [index, playerName] of playerNames.entries()) {
@@ -154,13 +178,13 @@ function PlayerNamesEntryForm({ onSubmit }: PlayerNamesEntryFormProps) {
       setAdmonition("Player names must be unique.");
       return;
     }
-    setDisabled(true);
-    setAdmonition("");
     const newPlayerNames = playerNames.filter(
       (_, i) => i !== playerNames.length - 1,
     );
     setPlayerNames(newPlayerNames);
     onSubmit(newPlayerNames);
+    setAdmonition("");
+    setDisabled(true);
   };
 
   var divs = [];
@@ -232,12 +256,12 @@ function ChoiceEntryForm({
   optional,
   onSubmit,
 }: ChoiceEntryFormProps) {
-  const [disabled, setDisabled] = useState(false);
   const [selected, setSelected] = useState<string | null>("");
+  const [disabled, setDisabled] = useState(false);
 
-  const handleSubmit = (option: string | null) => {
-    setDisabled(true);
+  const handleClick = (option: string | null) => {
     setSelected(option);
+    setDisabled(true);
     onSubmit(option);
   };
 
@@ -249,16 +273,65 @@ function ChoiceEntryForm({
         return (
           <button
             className={
-              disabled
-                ? option === selected
-                  ? "text-button-selected"
-                  : "text-button-deselected"
-                : "text-button"
+              option === selected
+                ? "text-button-selected"
+                : disabled
+                  ? "text-button-deselected"
+                  : "text-button"
             }
-            onClick={() => handleSubmit(option)}
+            onClick={() => handleClick(option)}
             disabled={disabled}
           >
             {option ?? "No Player"}
+          </button>
+        );
+      })}
+    </div>
+  );
+}
+
+interface MultiChoiceEntryFormProps {
+  options: string[];
+  numSelections: number;
+  onSubmit: (rumor: Array<string>) => void;
+}
+
+function MultiChoiceEntryForm({
+  options,
+  numSelections,
+  onSubmit,
+}: MultiChoiceEntryFormProps) {
+  const [selected, setSelected] = useState<Array<string>>([]);
+  const [disabled, setDisabled] = useState(false);
+
+  const handleClick = (option: string) => {
+    if (selected.includes(option)) {
+      return;
+    }
+    const newSelected = [...selected, option];
+    setSelected(newSelected);
+    if (newSelected.length >= numSelections) {
+      setDisabled(true);
+      onSubmit(newSelected);
+    }
+  };
+
+  return (
+    <div>
+      {options.map((option) => {
+        return (
+          <button
+            className={
+              selected.includes(option)
+                ? "text-button-selected"
+                : disabled
+                  ? "text-button-deselected"
+                  : "text-button"
+            }
+            onClick={() => handleClick(option)}
+            disabled={disabled}
+          >
+            {option}
           </button>
         );
       })}

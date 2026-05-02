@@ -4,13 +4,12 @@ from time import sleep
 from typing import cast
 
 from common.cards import (
-    CHARACTER_NAMES,
-    ROOM_NAMES,
     RUMORS,
-    WEAPON_NAMES,
     Character,
     Room,
+    RumorCard,
     Weapon,
+    parse_rumor,
 )
 from common.consts import MIN_N_PLAYERS
 from common.io.io import format_list
@@ -50,6 +49,35 @@ class TextIo:
 
         return player_names
 
+    def get_yes_or_no(
+        self, prompt: str, prefix: str | None = None, default: bool | None = None
+    ) -> bool:
+        y = "Y" if default is True else "y"
+        n = "N" if default is False else "n"
+        while True:
+            choice = self.input_(f"{prompt} ({y}/{n}): ", prefix, lower=True)
+            if choice is None:
+                choice = "y" if default is True else "n"
+            if choice.strip() in ["y", "yes"]:
+                return True
+            elif choice.strip() in ["n", "no"]:
+                return False
+            self.print_("Invalid choice.", prefix)
+
+    def get_extra_cards(self, n_extra_cards: int) -> list[RumorCard]:
+        extra_cards = []
+        # TODO: Select from list narrowed down by observer.
+        options = RUMORS
+        extra_cards: list[RumorCard] = []
+        for i in range(n_extra_cards):
+            extra_card = self.get_rumor_card(
+                prompt=f"Enter extra card #{i + 1}/{n_extra_cards}",
+                options=options,
+            )
+            extra_cards.append(extra_card)
+            options = [o for o in options if o != extra_card]
+        return extra_cards
+
     def announce_turn(self, turn_index: int, player_name: str) -> None:
         self.print_(f"It's {player_name.capitalize()}'s turn.")
 
@@ -64,18 +92,12 @@ class TextIo:
                 prefix,
                 lower=True,
             )
-            if rumor_name in CHARACTER_NAMES:
-                rumor = Character(name=rumor_name)
-            elif rumor_name in WEAPON_NAMES:
-                rumor = Weapon(name=rumor_name)
-            elif rumor_name in ROOM_NAMES:
-                rumor = Room(name=rumor_name)
-            else:
+            if rumor_name is None or (rumor_card := parse_rumor(rumor_name)) is None:
                 self.print_("Invalid rumor.", prefix, end=" ")
                 continue
-            if rumor in options:
-                return cast(T, rumor)
-            self.print_("Invalid rumor.", prefix, end=" ")
+            if rumor_card in options:
+                return cast(T, rumor_card)
+            self.print_("Invalid option.", prefix, end=" ")
 
     def get_player_index(
         self, player_indexes: list[int], all_player_names: list[str]
@@ -92,21 +114,6 @@ class TextIo:
                 return [n.lower() for n in all_player_names].index(player_name)
             else:
                 self.print_("Invalid player.", end=" ")
-
-    def get_yes_or_no(
-        self, prompt: str, prefix: str | None = None, default: bool | None = None
-    ) -> bool:
-        y = "Y" if default is True else "y"
-        n = "N" if default is False else "n"
-        while True:
-            choice = self.input_(f"{prompt} ({y}/{n}): ", prefix, lower=True)
-            if choice is None:
-                choice = "y" if default is True else "n"
-            if choice.strip() in ["y", "yes"]:
-                return True
-            elif choice.strip() in ["n", "no"]:
-                return False
-            self.print_("Invalid choice.", prefix)
 
     def print_(self, msg: str, prefix: str | None = None, end: str = "\n") -> None:
         if prefix is not None:

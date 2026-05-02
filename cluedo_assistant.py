@@ -13,7 +13,6 @@ from common.cards import (
     Character,
     Crime,
     Room,
-    RumorCard,
     Weapon,
 )
 from common.circular_sequence import CircularSequence
@@ -27,15 +26,9 @@ N_SAMPLES_FOR_PROBABILITY = 10
 
 
 class CluedoAssistant:
-    def __init__(
-        self,
-        io: AbstractIo,
-        player_names: list[str],
-        reveal_extra_cards_first: bool = False,
-    ) -> None:
+    def __init__(self, io: AbstractIo, player_names: list[str]) -> None:
         self.io = io
         self.player_names = player_names
-        self.reveal_extra_cards_first = reveal_extra_cards_first
         self.player_indices = list(range(len(self.player_names)))
         self.n_players = len(self.player_names)
         n_cards_per_player = (len(RUMORS) - N_CASE_FILE_CARDS) // self.n_players
@@ -45,12 +38,26 @@ class CluedoAssistant:
             n_cards_per_player=n_cards_per_player,
         )
         self.n_extra_cards = self.observer.n_extra_cards
+        if self.n_extra_cards > 0:
+            self.reveal_extra_cards_first = self.io.get_yes_or_no(
+                prompt=(
+                    "Based on the number of players, there must be extra cards that "
+                    "are neither in the case file nor in any player's hand. "
+                    "In observer mode, I must see these extra cards in order to solve "
+                    "the crime. "
+                    "Would you like to enter these extra cards now? "
+                    "If not, you can enter them later; "
+                    "I'll let you know when the knowing the extra cards is the only "
+                    "thing left I need to solve the crime."
+                ),
+            )
         self.turn_index = 0
 
     def run(self, dashboard: bool) -> None:
-        if self.n_extra_cards != 0 and self.reveal_extra_cards_first:
+        if self.n_extra_cards > 0 and self.reveal_extra_cards_first:
             self.observer.sees_extra_cards(
-                turn_index=self.turn_index, rumor_cards=self._get_extra_cards()
+                turn_index=self.turn_index,
+                rumor_cards=self.io.get_extra_cards(n_extra_cards=self.n_extra_cards),
             )
         while True:
             for player_name in self.player_names:
@@ -64,36 +71,26 @@ class CluedoAssistant:
                 self.turn_index += 1
                 if self._run_turn(current_player_name=player_name):
                     return
-                if self.n_extra_cards != 0 and not self.reveal_extra_cards_first:
+                if self.n_extra_cards > 0 and not self.reveal_extra_cards_first:
                     # TODO: Move into `_run_turn`.
                     observer_must_see_extra_cards = self.observer.must_see_extra_cards(
                         turn_index=self.turn_index
                     )
                     if observer_must_see_extra_cards:
+                        self.io.print_(
+                            "Knowing the extra cards is the only thing left I need to "
+                            "solve the crime."
+                        )
                         self.observer.sees_extra_cards(
                             turn_index=self.turn_index,
-                            rumor_cards=self._get_extra_cards(),
+                            rumor_cards=self.io.get_extra_cards(
+                                n_extra_cards=self.n_extra_cards
+                            ),
                         )
                         solved = self._try_solving_crime()
                         if not solved:
                             self.io.print_("An unexpected error occurred.")
                         return
-
-    def _get_extra_cards(self) -> list[RumorCard]:
-        self.io.print_("Look at the extra cards.")
-        self.io.print_("What are they?")
-        extra_cards = []
-        # TODO: Select from list narrowed down by observer.
-        options = RUMORS
-        extra_cards: list[RumorCard] = []
-        for i in range(self.n_extra_cards):
-            extra_card = self.io.get_rumor_card(
-                prompt=f"Enter extra card #{i + 1}/{self.n_extra_cards}",
-                options=options,
-            )
-            extra_cards.append(extra_card)
-            options = [o for o in options if o != extra_card]
-        return extra_cards
 
     def _run_turn(self, current_player_name: str) -> bool:
         self.io.announce_turn(self.turn_index, current_player_name)
@@ -200,9 +197,7 @@ class CluedoAssistant:
         return True
 
 
-def cluedo_assistant(
-    io: AbstractIo, dashboard: bool = False, reveal_extra_cards_first: bool = False
-) -> None:
+def cluedo_assistant(io: AbstractIo, dashboard: bool = False) -> None:
     if isinstance(io, TextIo):
         os.system("cls" if os.name == "nt" else "clear")
         print()
@@ -211,11 +206,8 @@ def cluedo_assistant(
     io.print_("Welcome to the Cluedo assistant!")
     io.print_("Give me information about your gameplay by answering my prompts.")
     io.print_("I'll tell you what the crime was as soon as I've isolated the solution.")
-    cluedo_assistant = CluedoAssistant(
-        io=io,
-        player_names=io.get_human_player_names(),
-        reveal_extra_cards_first=reveal_extra_cards_first,
-    )
+    player_names = io.get_human_player_names()
+    cluedo_assistant = CluedoAssistant(io=io, player_names=player_names)
     cluedo_assistant.run(dashboard)
 
 
@@ -225,11 +217,7 @@ def main() -> None:
         dashboard_thread = run_dashboard()
     else:
         dashboard_thread = None
-    cluedo_assistant(
-        io=TextIo(),
-        dashboard=cli_settings.dashboard,
-        reveal_extra_cards_first=cli_settings.reveal_extra_cards_first,
-    )
+    cluedo_assistant(io=TextIo(), dashboard=cli_settings.dashboard)
     if dashboard_thread is not None:
         dashboard_thread.join()
 
@@ -238,7 +226,6 @@ class _CliSettings(BaseSettings):
     model_config = SettingsConfigDict(cli_kebab_case=True, cli_implicit_flags=True)
 
     dashboard: bool = False
-    reveal_extra_cards_first: bool = False
 
     @classmethod
     def from_cli_args(cls) -> Self:
