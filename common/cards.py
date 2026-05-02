@@ -80,6 +80,17 @@ ROOMS: list[Room] = [Room(name=n) for n in ROOM_NAMES]
 RUMORS: list[Character | Weapon | Room] = [*CHARACTERS, *WEAPONS, *ROOMS]
 
 
+def parse_rumor(rumor_name: str) -> RumorCard | None:
+    if rumor_name in CHARACTER_NAMES:
+        return Character(name=rumor_name)
+    elif rumor_name in WEAPON_NAMES:
+        return Weapon(name=rumor_name)
+    elif rumor_name in ROOM_NAMES:
+        return Room(name=rumor_name)
+    else:
+        return None
+
+
 class Crime(NamedTuple):
     character: Character
     weapon: Weapon

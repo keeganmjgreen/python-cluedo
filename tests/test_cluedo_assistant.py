@@ -233,6 +233,7 @@ def test_collect_responses(case: Case) -> None:
         get_player_index_call_count += 1
         return player_index
 
+    textio.get_yes_or_no = lambda prompt: False  # type: ignore
     textio.get_player_index = get_player_index
     textio.print_ = lambda: None
     textio.input_ = lambda: ""

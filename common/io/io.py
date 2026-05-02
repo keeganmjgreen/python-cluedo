@@ -1,11 +1,17 @@
 from collections.abc import Sequence
 from typing import Any, Protocol
 
-from common.cards import RUMORS, Character, Room, Weapon
+from common.cards import RUMORS, Character, Room, RumorCard, Weapon
 
 
 class AbstractIo(Protocol):
     def get_human_player_names(self) -> list[str]: ...
+
+    def get_yes_or_no(
+        self, prompt: str, prefix: str | None = None, default: bool | None = None
+    ) -> bool: ...
+
+    def get_extra_cards(self, n_extra_cards: int) -> list[RumorCard]: ...
 
     def announce_turn(self, turn_index: int, player_name: str) -> None: ...
 

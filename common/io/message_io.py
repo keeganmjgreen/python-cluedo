@@ -7,18 +7,19 @@ import pydantic
 from pydantic.alias_generators import to_camel
 
 from common.cards import (
-    CHARACTER_NAMES,
-    ROOM_NAMES,
     RUMORS,
-    WEAPON_NAMES,
     Character,
     Room,
+    RumorCard,
     Weapon,
+    parse_rumor,
 )
 
 
 class BaseModel(pydantic.BaseModel):
-    model_config = pydantic.ConfigDict(alias_generator=to_camel)
+    model_config = pydantic.ConfigDict(
+        alias_generator=to_camel, populate_by_name=True, serialize_by_alias=True
+    )
 
 
 class _PlainMessage(BaseModel):
@@ -55,6 +56,18 @@ class _OptionalChoiceEntryResponse(BaseModel):
     value: str | None
 
 
+class _MultiChoiceEntryRequest(BaseModel):
+    type: Literal["multi_choice_entry_request"] = "multi_choice_entry_request"
+    text: str = ""
+    options: list[str]
+    num_selections: int
+
+
+class _MultiChoiceEntryResponse(BaseModel):
+    type: Literal["multi_choice_entry_response"] = "multi_choice_entry_response"
+    values: list[str]
+
+
 @dataclasses.dataclass
 class MessageIo:
     send_queue: queue.Queue[dict[str, Any]]
@@ -70,6 +83,40 @@ class MessageIo:
         self.send_queue.put(request.model_dump())
         response = _PlayerNamesEntryResponse.model_validate(self.receive_queue.get())
         return response.player_names
+
+    def get_yes_or_no(
+        self, prompt: str, prefix: str | None = None, default: bool | None = None
+    ) -> bool:
+        options = ["yes", "no"]
+        self.send_queue.put(
+            _ChoiceEntryRequest(
+                text=prompt, options=options, optional=False
+            ).model_dump()
+        )
+        response = _RequiredChoiceEntryResponse.model_validate(self.receive_queue.get())
+        if response.value not in options:
+            raise ValueError("Invalid option")
+        return response.value == "yes"
+
+    def get_extra_cards(self, n_extra_cards: int) -> list[RumorCard]:
+        self.send_queue.put(
+            _MultiChoiceEntryRequest(
+                text=(
+                    f"Select the {n_extra_cards} extra cards."
+                    if n_extra_cards > 1
+                    else "Select the extra card."
+                ),
+                options=[o.name for o in RUMORS],
+                num_selections=n_extra_cards,
+            ).model_dump()
+        )
+        response = _MultiChoiceEntryResponse.model_validate(self.receive_queue.get())
+        extra_cards: list[RumorCard] = []
+        for rumor_name in response.values:
+            if (rumor_card := parse_rumor(rumor_name)) is None:
+                raise ValueError
+            extra_cards.append(rumor_card)
+        return extra_cards
 
     def announce_turn(self, turn_index: int, player_name: str) -> None:
         self.send_queue.put(
@@ -89,17 +136,11 @@ class MessageIo:
             ).model_dump()
         )
         response = _RequiredChoiceEntryResponse.model_validate(self.receive_queue.get())
-        rumor_name = response.value
-        if rumor_name in CHARACTER_NAMES:
-            rumor = Character(name=rumor_name)
-        elif rumor_name in WEAPON_NAMES:
-            rumor = Weapon(name=rumor_name)
-        elif rumor_name in ROOM_NAMES:
-            rumor = Room(name=rumor_name)
-        else:
+        rumor_card = parse_rumor(rumor_name=response.value)
+        if rumor_card is None:
             raise ValueError("Invalid rumor")
-        if rumor in options:
-            return cast(T, rumor)
+        if rumor_card in options:
+            return cast(T, rumor_card)
         raise ValueError("Invalid option")
 
     def get_player_index(
