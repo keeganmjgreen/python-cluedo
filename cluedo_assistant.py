@@ -1,7 +1,7 @@
 import os
 import sys
 from time import sleep
-from typing import Self
+from typing import Self, assert_never
 
 from pydantic_settings import BaseSettings, CliApp, SettingsConfigDict
 
@@ -16,6 +16,7 @@ from common.cards import (
     Weapon,
 )
 from common.circular_sequence import CircularSequence
+from common.consts import GameVariant
 from common.dashboard import run_dashboard
 from common.io.io import AbstractIo
 from common.io.text_io import TextIo
@@ -37,6 +38,7 @@ class CluedoAssistant:
             player_indices=self.player_indices,
             n_cards_per_player=n_cards_per_player,
         )
+        self.turn_index = 0
         self.n_extra_cards = self.observer.n_extra_cards
         if self.n_extra_cards > 0:
             self.reveal_extra_cards_first = self.io.get_yes_or_no(
@@ -51,14 +53,16 @@ class CluedoAssistant:
                     "thing left I need to solve the crime."
                 ),
             )
-        self.turn_index = 0
+            if self.reveal_extra_cards_first:
+                self.observer.sees_extra_cards(
+                    turn_index=self.turn_index,
+                    rumor_cards=self.io.get_extra_cards(
+                        n_extra_cards=self.n_extra_cards
+                    ),
+                )
+        self.game_variant = self.io.get_game_variant()
 
     def run(self, dashboard: bool) -> None:
-        if self.n_extra_cards > 0 and self.reveal_extra_cards_first:
-            self.observer.sees_extra_cards(
-                turn_index=self.turn_index,
-                rumor_cards=self.io.get_extra_cards(n_extra_cards=self.n_extra_cards),
-            )
         while True:
             for player_name in self.player_names:
                 if dashboard:
@@ -119,14 +123,26 @@ class CluedoAssistant:
     def collect_responses(self, current_player_name: str) -> bool:
         current_player_index = self.player_names.index(current_player_name)
         seq = CircularSequence(self.player_indices)
+        match self.game_variant:
+            case GameVariant.LEFT_PLAYERS_REVEAL:
+                directions = [-1]
+            case GameVariant.RIGHT_PLAYERS_REVEAL:
+                directions = [+1]
+            case GameVariant.BOTH_SIDES_REVEAL:
+                directions = [-1, +1]
+            case _ as unreachable:
+                assert_never(unreachable)
+        distance = (
+            self.n_players // 2
+            if self.game_variant is GameVariant.BOTH_SIDES_REVEAL
+            else self.n_players - 1
+        )
         choiceset = [
-            seq.get_adjacent_items(
-                current_player_index, direction * (self.n_players // 2)
-            )
-            for direction in [-1, +1]
+            seq.get_adjacent_items(current_player_index, direction * distance)
+            for direction in directions
         ]
         farthest_player_index = (
-            seq.get_offset_item(current_player_index, self.n_players // 2)
+            seq.get_offset_item(current_player_index, distance)
             if self.n_players % 2 == 0
             else None
         )
@@ -143,7 +159,10 @@ class CluedoAssistant:
                 other_player_index=respondent_index,
                 rumor_card=UnknownRumor(),
             )
-            if respondent_index == farthest_player_index:
+            if (
+                self.game_variant is GameVariant.BOTH_SIDES_REVEAL
+                and respondent_index == farthest_player_index
+            ):
                 farthest_player_reached = True
                 choiceset = [
                     [c for c in choices if c != farthest_player_index]
