@@ -42,6 +42,7 @@ class CluedoAssistant:
             optional="I'm just observing",
             player_indexes=list(range(len(self.player_names))),
             all_player_names=self.player_names,
+            player_index_of_user=-1,
         )
         if player_index is None:
             self.agent = SmartBotObserver(
@@ -200,6 +201,7 @@ class CluedoAssistant:
                 optional="no player",
                 player_indexes=sorted({c for choices in choiceset for c in choices}),
                 all_player_names=self.player_names,
+                player_index_of_user=self.agent.agent_index,
             )
             if respondent_index is None:
                 break
