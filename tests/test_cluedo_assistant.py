@@ -227,6 +227,7 @@ def test_collect_responses(case: Case) -> None:
         optional: str,
         player_indexes: list[int],
         all_player_names: list[str],
+        player_index_of_user: int,
     ) -> int | None:
         if "Which player are you?" in prompt:
             return

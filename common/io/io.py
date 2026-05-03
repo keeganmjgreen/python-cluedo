@@ -60,6 +60,7 @@ class AbstractIo(abc.ABC):
         optional: str,
         player_indexes: list[int],
         all_player_names: list[str],
+        player_index_of_user: int,
     ) -> int | None:
         raise NotImplementedError
 

@@ -18,17 +18,23 @@ const Banner = z.object({
   text: z.string(),
 });
 
+const Option = z.object({
+  value: z.string(),
+  displayName: z.string(),
+});
+type OptionType = z.infer<typeof Option>;
+
 const ChoiceEntryRequest = z.object({
   type: z.literal("choice_entry_request"),
   text: z.string(),
-  options: z.array(z.string()),
+  options: z.array(Option),
   optional: z.nullable(z.string()),
 });
 
 const MultiChoiceEntryRequest = z.object({
   type: z.literal("multi_choice_entry_request"),
   text: z.string(),
-  options: z.array(z.string()),
+  options: z.array(Option),
   numSelections: z.int(),
 });
 
@@ -247,7 +253,7 @@ function PlayerNamesEntryForm({ onSubmit }: PlayerNamesEntryFormProps) {
 }
 
 interface ChoiceEntryFormProps {
-  options: string[];
+  options: OptionType[];
   optional: string | null;
   onSubmit: (rumor: string | null) => void;
 }
@@ -266,7 +272,9 @@ function ChoiceEntryForm({
     onSubmit(option);
   };
 
-  const newOptions = optional ? [...options, null] : options;
+  const newOptions = optional
+    ? [...options, { value: null, displayName: optional }]
+    : options;
 
   return (
     <div>
@@ -274,16 +282,16 @@ function ChoiceEntryForm({
         return (
           <button
             className={
-              option === selected
+              option.value === selected
                 ? "text-button-selected"
                 : disabled
                   ? "text-button-deselected"
                   : "text-button"
             }
-            onClick={() => handleClick(option)}
+            onClick={() => handleClick(option.value)}
             disabled={disabled}
           >
-            {option ?? optional}
+            {option.displayName}
           </button>
         );
       })}
@@ -292,7 +300,7 @@ function ChoiceEntryForm({
 }
 
 interface MultiChoiceEntryFormProps {
-  options: string[];
+  options: OptionType[];
   numSelections: number;
   onSubmit: (rumor: Array<string>) => void;
 }
@@ -323,16 +331,16 @@ function MultiChoiceEntryForm({
         return (
           <button
             className={
-              selected.includes(option)
+              selected.includes(option.value)
                 ? "text-button-selected"
                 : disabled
                   ? "text-button-deselected"
                   : "text-button"
             }
-            onClick={() => handleClick(option)}
+            onClick={() => handleClick(option.value)}
             disabled={disabled}
           >
-            {option}
+            {option.displayName}
           </button>
         );
       })}

@@ -43,10 +43,15 @@ class _Banner(BaseModel):
     text: str
 
 
+class _Option(BaseModel):
+    value: str
+    display_name: str
+
+
 class _ChoiceEntryRequest(BaseModel):
     type: Literal["choice_entry_request"] = "choice_entry_request"
     text: str = ""
-    options: list[str]
+    options: list[_Option]
     optional: str | None
 
 
@@ -61,7 +66,7 @@ class _OptionalChoiceEntryResponse(BaseModel):
 class _MultiChoiceEntryRequest(BaseModel):
     type: Literal["multi_choice_entry_request"] = "multi_choice_entry_request"
     text: str = ""
-    options: list[str]
+    options: list[_Option]
     num_selections: int
 
 
@@ -87,7 +92,11 @@ class MessageIo(AbstractIo):
         options = ["yes", "no"]
         self.send_queue.put(
             _ChoiceEntryRequest(
-                text=prompt, options=options, optional=None
+                text=prompt,
+                options=[
+                    _Option(value=o, display_name=o.capitalize()) for o in options
+                ],
+                optional=None,
             ).model_dump()
         )
         response = _RequiredChoiceEntryResponse.model_validate(self.receive_queue.get())
@@ -109,7 +118,10 @@ class MessageIo(AbstractIo):
         self.send_queue.put(
             _MultiChoiceEntryRequest(
                 text=prompt,
-                options=[o.name for o in RUMORS],
+                options=[
+                    _Option(value=o.name, display_name=o.name.capitalize())
+                    for o in RUMORS
+                ],
                 num_selections=n_rumor_cards,
             ).model_dump()
         )
@@ -125,7 +137,10 @@ class MessageIo(AbstractIo):
         self.send_queue.put(
             _ChoiceEntryRequest(
                 text=self._GAME_VARIANT_PROMPT,
-                options=[gv.value for gv in GameVariant],
+                options=[
+                    _Option(value=gv.value, display_name=gv.value.capitalize())
+                    for gv in GameVariant
+                ],
                 optional=None,
             ).model_dump()
         )
@@ -150,7 +165,12 @@ class MessageIo(AbstractIo):
             prompt = f"{prefix}: {prompt}"
         self.send_queue.put(
             _ChoiceEntryRequest(
-                text=prompt, options=[o.name for o in options], optional=None
+                text=prompt,
+                options=[
+                    _Option(value=o.name, display_name=o.name.capitalize())
+                    for o in options
+                ],
+                optional=None,
             ).model_dump()
         )
         response = _RequiredChoiceEntryResponse.model_validate(self.receive_queue.get())
@@ -167,11 +187,23 @@ class MessageIo(AbstractIo):
         optional: str,
         player_indexes: list[int],
         all_player_names: list[str],
+        player_index_of_user: int,
     ) -> int | None:
-        options = [all_player_names[i] for i in player_indexes]
         self.send_queue.put(
             _ChoiceEntryRequest(
-                text=prompt, options=options, optional=optional
+                text=prompt,
+                options=[
+                    _Option(
+                        value=all_player_names[i],
+                        display_name=(
+                            "Me"
+                            if i == player_index_of_user
+                            else all_player_names[i].capitalize()
+                        ),
+                    )
+                    for i in player_indexes
+                ],
+                optional=optional.capitalize(),
             ).model_dump()
         )
         response = _OptionalChoiceEntryResponse.model_validate(self.receive_queue.get())
