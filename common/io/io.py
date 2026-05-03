@@ -27,6 +27,10 @@ class AbstractIo(abc.ABC):
         raise NotImplementedError
 
     @abc.abstractmethod
+    def get_rumor_cards(self, prompt: str, n_rumor_cards: int) -> list[RumorCard]:
+        raise NotImplementedError
+
+    @abc.abstractmethod
     def get_game_variant(self) -> GameVariant:
         raise NotImplementedError
 
@@ -38,7 +42,9 @@ class AbstractIo(abc.ABC):
     )
 
     @abc.abstractmethod
-    def announce_turn(self, turn_index: int, player_name: str) -> None:
+    def announce_turn(
+        self, turn_index: int, player_name: str, current_player_is_user: bool
+    ) -> None:
         raise NotImplementedError
 
     @abc.abstractmethod
@@ -49,7 +55,11 @@ class AbstractIo(abc.ABC):
 
     @abc.abstractmethod
     def get_player_index(
-        self, player_indexes: list[int], all_player_names: list[str]
+        self,
+        prompt: str,
+        optional: str,
+        player_indexes: list[int],
+        all_player_names: list[str],
     ) -> int | None:
         raise NotImplementedError
 

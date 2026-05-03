@@ -63,14 +63,19 @@ class TextIo(AbstractIo):
             self.print_("Invalid choice.", prefix)
 
     def get_extra_cards(self, n_extra_cards: int) -> list[RumorCard]:
-        extra_cards = []
         # TODO: Select from list narrowed down by observer.
+        return self.get_rumor_cards(
+            prompt="Enter extra card",
+            n_rumor_cards=n_extra_cards,
+        )
+
+    def get_rumor_cards(self, prompt: str, n_rumor_cards: int) -> list[RumorCard]:
+        extra_cards = []
         options = RUMORS
         extra_cards: list[RumorCard] = []
-        for i in range(n_extra_cards):
+        for i in range(n_rumor_cards):
             extra_card = self.get_rumor_card(
-                prompt=f"Enter extra card #{i + 1}/{n_extra_cards}",
-                options=options,
+                prompt=f"{prompt}  #{i + 1}/{n_rumor_cards}", options=options
             )
             extra_cards.append(extra_card)
             options = [o for o in options if o != extra_card]
@@ -96,8 +101,12 @@ class TextIo(AbstractIo):
                 continue
             return GameVariant(options[number - 1])
 
-    def announce_turn(self, turn_index: int, player_name: str) -> None:
-        self.print_(f"It's {player_name.capitalize()}'s turn.")
+    def announce_turn(
+        self, turn_index: int, player_name: str, current_player_is_user: bool
+    ) -> None:
+        self.print_(
+            f"It's {'your' if current_player_is_user else f"{player_name.capitalize()}'s"} turn."
+        )
 
     def get_rumor_card[T: Character | Weapon | Room](
         self, prompt: str, prefix: str | None = None, options: Sequence[T] = RUMORS
@@ -118,12 +127,16 @@ class TextIo(AbstractIo):
             self.print_("Invalid option.", prefix, end=" ")
 
     def get_player_index(
-        self, player_indexes: list[int], all_player_names: list[str]
+        self,
+        prompt: str,
+        optional: str,
+        player_indexes: list[int],
+        all_player_names: list[str],
     ) -> int | None:
         # TODO: Make more user-friendly?
         while True:
             player_name = self.input_(
-                f"Enter player name (<Enter> for no player) ({format_list([all_player_names[i] for i in player_indexes], 'or')}): ",
+                f"{prompt} ({format_list([all_player_names[i] for i in player_indexes], 'or')}): ",
                 lower=True,
             )
             if player_name is None:

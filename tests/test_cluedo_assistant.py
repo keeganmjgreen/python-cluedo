@@ -223,8 +223,13 @@ def test_collect_responses(case: Case) -> None:
     get_player_index_call_count = 0
 
     def get_player_index(
-        player_indexes: list[int], all_player_names: list[str]
+        prompt: str,
+        optional: str,
+        player_indexes: list[int],
+        all_player_names: list[str],
     ) -> int | None:
+        if "Which player are you?" in prompt:
+            return
         nonlocal get_player_index_call_count
         player_index = (
             case.respondent_indexes[get_player_index_call_count]
@@ -245,21 +250,21 @@ def test_collect_responses(case: Case) -> None:
     )
     assistant.turn_index = 1
     guess = Crime(Character("plum"), Weapon("ax"), Room("spa"))
-    assistant.observer.add_game_log_entry(turn_index=assistant.turn_index, guess=guess)
+    assistant.agent.add_game_log_entry(turn_index=assistant.turn_index, guess=guess)
 
     # Act
 
-    assistant.collect_responses(current_player_name="Player 0")
+    assistant.collect_responses(current_player_name="Player 0", guess=guess)
 
     # Assert
 
     assert get_player_index_call_count == case.expected_n_prompts
-    assert len(assistant.observer.game_log) == 2
-    assert assistant.observer.game_log[1].turn_index == 1
-    assert assistant.observer.game_log[1].guess == guess
+    assert len(assistant.agent.game_log) == 2
+    assert assistant.agent.game_log[1].turn_index == 1
+    assert assistant.agent.game_log[1].guess == guess
     assert (
         sorted(
-            assistant.observer.game_log[1].card_reveals,
+            assistant.agent.game_log[1].card_reveals,
             key=(lambda cr: cr.other_player_index),
         )
         == case.expected_card_reveals
