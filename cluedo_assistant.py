@@ -6,7 +6,7 @@ from typing import Self, assert_never
 from pydantic_settings import BaseSettings, CliApp, SettingsConfigDict
 
 from common import store
-from common.agent_utils import UnknownRumor
+from common.agent_utils import BasePlayer, UnknownRumor
 from common.cards import (
     N_CASE_FILE_CARDS,
     RUMORS,
@@ -20,7 +20,7 @@ from common.consts import GameVariant
 from common.dashboard import run_dashboard
 from common.io.io import AbstractIo
 from common.io.text_io import TextIo
-from common.smart_bot_agent import SmartBotObserver, UnsolvableError
+from common.smart_bot_agent import SmartBotObserver, SmartBotPlayer, UnsolvableError
 from common.utils import print_logo
 
 N_SAMPLES_FOR_PROBABILITY = 10
@@ -33,14 +33,36 @@ class CluedoAssistant:
         self.player_indices = list(range(len(self.player_names)))
         self.n_players = len(self.player_names)
         n_cards_per_player = (len(RUMORS) - N_CASE_FILE_CARDS) // self.n_players
-        self.observer = SmartBotObserver(
-            agent_index=-1,
-            player_indices=self.player_indices,
-            n_cards_per_player=n_cards_per_player,
+        player_index = self.io.get_player_index(
+            prompt=(
+                "Which player are you? (<Enter> if no player if you're just observing)"
+                if isinstance(self.io, TextIo)
+                else "Which player are you?"
+            ),
+            optional="I'm just observing",
+            player_indexes=list(range(len(self.player_names))),
+            all_player_names=self.player_names,
         )
+        if player_index is None:
+            self.agent = SmartBotObserver(
+                agent_index=-1,
+                player_indices=self.player_indices,
+                n_cards_per_player=n_cards_per_player,
+            )
+        else:
+            player_hand = self.io.get_rumor_cards(
+                prompt=f"Which {n_cards_per_player} rumor cards are in your hand?",
+                n_rumor_cards=n_cards_per_player,
+            )
+            self.agent = SmartBotPlayer(
+                agent_index=player_index,
+                player_indices=self.player_indices,
+                n_cards_per_player=n_cards_per_player,
+                rumor_cards=player_hand,
+            )
         self.turn_index = 0
-        self.n_extra_cards = self.observer.n_extra_cards
-        if self.n_extra_cards > 0:
+        self.n_extra_cards = self.agent.n_extra_cards
+        if not isinstance(self.agent, BasePlayer) and self.n_extra_cards > 0:
             self.reveal_extra_cards_first = self.io.get_yes_or_no(
                 prompt=(
                     "Based on the number of players, there must be extra cards that "
@@ -54,7 +76,7 @@ class CluedoAssistant:
                 ),
             )
             if self.reveal_extra_cards_first:
-                self.observer.sees_extra_cards(
+                self.agent.sees_extra_cards(
                     turn_index=self.turn_index,
                     rumor_cards=self.io.get_extra_cards(
                         n_extra_cards=self.n_extra_cards
@@ -66,18 +88,22 @@ class CluedoAssistant:
         while True:
             for player_name in self.player_names:
                 if dashboard:
-                    probabilities = self.observer.solve_truths_cnf_probabilities(
+                    probabilities = self.agent.solve_truths_cnf_probabilities(
                         n_samples=N_SAMPLES_FOR_PROBABILITY
                     )
                     store.append_probabilities(
-                        str(self.observer), self.turn_index, probabilities
+                        str(self.agent), self.turn_index, probabilities
                     )
                 self.turn_index += 1
                 if self._run_turn(current_player_name=player_name):
                     return
-                if self.n_extra_cards > 0 and not self.reveal_extra_cards_first:
+                if (
+                    not isinstance(self.agent, BasePlayer)
+                    and self.n_extra_cards > 0
+                    and not self.reveal_extra_cards_first
+                ):
                     # TODO: Move into `_run_turn`.
-                    observer_must_see_extra_cards = self.observer.must_see_extra_cards(
+                    observer_must_see_extra_cards = self.agent.must_see_extra_cards(
                         turn_index=self.turn_index
                     )
                     if observer_must_see_extra_cards:
@@ -85,7 +111,7 @@ class CluedoAssistant:
                             "Knowing the extra cards is the only thing left I need to "
                             "solve the crime."
                         )
-                        self.observer.sees_extra_cards(
+                        self.agent.sees_extra_cards(
                             turn_index=self.turn_index,
                             rumor_cards=self.io.get_extra_cards(
                                 n_extra_cards=self.n_extra_cards
@@ -97,37 +123,47 @@ class CluedoAssistant:
                         return
 
     def _run_turn(self, current_player_name: str) -> bool:
-        self.io.announce_turn(self.turn_index, current_player_name)
+        current_player_index = self.player_names.index(current_player_name)
+        current_player_is_user = current_player_index == self.agent.agent_index
+
+        self.io.announce_turn(
+            self.turn_index,
+            current_player_name,
+            current_player_is_user=current_player_is_user,
+        )
 
         rumor_started = self.io.get_yes_or_no(
-            f"Did {current_player_name.capitalize()} start a rumor in this turn?"
+            f"Did {'you' if current_player_is_user else current_player_name.capitalize()} start a rumor in this turn?"
         )
         if not rumor_started:
-            self.observer.add_game_log_entry(turn_index=self.turn_index)
+            self.agent.add_game_log_entry(turn_index=self.turn_index)
             return False
 
         guess = self._get_guess(current_player_name)
-        self.observer.add_game_log_entry(turn_index=self.turn_index, guess=guess)
+        self.agent.add_game_log_entry(turn_index=self.turn_index, guess=guess)
 
         self.io.print_("Who gave evidence that the suspect, weapon, or room was wrong?")
-        return self.collect_responses(current_player_name)
+        return self.collect_responses(current_player_name, guess)
 
     def _get_guess(self, current_player_name: str) -> Crime:
+        current_player_index = self.player_names.index(current_player_name)
+        current_player_is_user = current_player_index == self.agent.agent_index
+
         character = self.io.get_rumor_card(
-            prompt=f"Which character does {current_player_name.capitalize()} say killed the host?",
+            prompt=f"Which character {'do you' if current_player_is_user else f'does {current_player_name.capitalize()}'} say killed the host?",
             options=Character.instances(),
         )
         weapon = self.io.get_rumor_card(
-            prompt=f"What weapon does {current_player_name.capitalize()} say was used?",
+            prompt=f"Which weapon {'do you' if current_player_is_user else f'does {current_player_name.capitalize()}'} say was used?",
             options=Weapon.instances(),
         )
         room = self.io.get_rumor_card(
-            prompt=f"Which room does {current_player_name.capitalize()} say the murder took place in?",
+            prompt=f"Which room {'do you' if current_player_is_user else f'does {current_player_name.capitalize()}'} say the murder took place in?",
             options=Room.instances(),
         )
         return Crime(character=character, weapon=weapon, room=room)
 
-    def collect_responses(self, current_player_name: str) -> bool:
+    def collect_responses(self, current_player_name: str, guess: Crime) -> bool:
         current_player_index = self.player_names.index(current_player_name)
         seq = CircularSequence(self.player_indices)
         match self.game_variant:
@@ -156,15 +192,32 @@ class CluedoAssistant:
         farthest_player_reached = False
         while sum(len(choices) for choices in choiceset) > 0:
             respondent_index = self.io.get_player_index(
+                prompt=(
+                    "Enter player name (<Enter> if no player)"
+                    if isinstance(self.io, TextIo)
+                    else ""
+                ),
+                optional="no player",
                 player_indexes=sorted({c for choices in choiceset for c in choices}),
                 all_player_names=self.player_names,
             )
             if respondent_index is None:
                 break
-            self.observer.sees_card(
+            if current_player_index == self.agent.agent_index:
+                rumor_card = self.io.get_rumor_card(
+                    prompt=(
+                        "Which rumor card did "
+                        f"{self.player_names[respondent_index].capitalize()} "
+                        "reveal to you?"
+                    ),
+                    options=guess,
+                )
+            else:
+                rumor_card = UnknownRumor()
+            self.agent.sees_card(
                 turn_index=self.turn_index,
                 other_player_index=respondent_index,
-                rumor_card=UnknownRumor(),
+                rumor_card=rumor_card,
             )
             if (
                 self.game_variant is GameVariant.BOTH_SIDES_REVEAL
@@ -186,7 +239,7 @@ class CluedoAssistant:
                         : choice_list.index(respondent_index)
                     ]
                     for nonrespondent_index in nonrespondent_indexes:
-                        self.observer.sees_card(
+                        self.agent.sees_card(
                             turn_index=self.turn_index,
                             other_player_index=nonrespondent_index,
                             rumor_card=None,
@@ -201,7 +254,7 @@ class CluedoAssistant:
         all_choices = sorted({c for choices in choiceset for c in choices})
         for choice in all_choices:
             nonrespondent_index = choice
-            self.observer.sees_card(
+            self.agent.sees_card(
                 turn_index=self.turn_index,
                 other_player_index=nonrespondent_index,
                 rumor_card=None,
@@ -212,7 +265,7 @@ class CluedoAssistant:
         return False
 
     def _try_solving_crime(self) -> bool:
-        crime = self.observer.try_solving_crime()
+        crime = self.agent.try_solving_crime()
         if crime is None:
             return False
         self.io.print_("The Cluedo assistant has solved the case!")

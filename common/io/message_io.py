@@ -47,7 +47,7 @@ class _ChoiceEntryRequest(BaseModel):
     type: Literal["choice_entry_request"] = "choice_entry_request"
     text: str = ""
     options: list[str]
-    optional: bool
+    optional: str | None
 
 
 class _RequiredChoiceEntryResponse(BaseModel):
@@ -87,7 +87,7 @@ class MessageIo(AbstractIo):
         options = ["yes", "no"]
         self.send_queue.put(
             _ChoiceEntryRequest(
-                text=prompt, options=options, optional=False
+                text=prompt, options=options, optional=None
             ).model_dump()
         )
         response = _RequiredChoiceEntryResponse.model_validate(self.receive_queue.get())
@@ -96,15 +96,21 @@ class MessageIo(AbstractIo):
         return response.value == "yes"
 
     def get_extra_cards(self, n_extra_cards: int) -> list[RumorCard]:
+        return self.get_rumor_cards(
+            prompt=(
+                f"Select the {n_extra_cards} extra cards."
+                if n_extra_cards > 1
+                else "Select the extra card."
+            ),
+            n_rumor_cards=n_extra_cards,
+        )
+
+    def get_rumor_cards(self, prompt: str, n_rumor_cards: int) -> list[RumorCard]:
         self.send_queue.put(
             _MultiChoiceEntryRequest(
-                text=(
-                    f"Select the {n_extra_cards} extra cards."
-                    if n_extra_cards > 1
-                    else "Select the extra card."
-                ),
+                text=prompt,
                 options=[o.name for o in RUMORS],
-                num_selections=n_extra_cards,
+                num_selections=n_rumor_cards,
             ).model_dump()
         )
         response = _MultiChoiceEntryResponse.model_validate(self.receive_queue.get())
@@ -120,15 +126,19 @@ class MessageIo(AbstractIo):
             _ChoiceEntryRequest(
                 text=self._GAME_VARIANT_PROMPT,
                 options=[gv.value for gv in GameVariant],
-                optional=False,
+                optional=None,
             ).model_dump()
         )
         response = _RequiredChoiceEntryResponse.model_validate(self.receive_queue.get())
         return GameVariant(response.value)
 
-    def announce_turn(self, turn_index: int, player_name: str) -> None:
+    def announce_turn(
+        self, turn_index: int, player_name: str, current_player_is_user: bool
+    ) -> None:
         self.send_queue.put(
-            _Banner(text=f"Turn {turn_index}: {player_name.capitalize()}").model_dump()
+            _Banner(
+                text=f"Turn {turn_index}: {'Your Turn' if current_player_is_user else f"{player_name.capitalize()}'s Turn"}"
+            ).model_dump()
         )
 
     def get_rumor_card[T: Character | Weapon | Room](
@@ -140,7 +150,7 @@ class MessageIo(AbstractIo):
             prompt = f"{prefix}: {prompt}"
         self.send_queue.put(
             _ChoiceEntryRequest(
-                text=prompt, options=[o.name for o in options], optional=False
+                text=prompt, options=[o.name for o in options], optional=None
             ).model_dump()
         )
         response = _RequiredChoiceEntryResponse.model_validate(self.receive_queue.get())
@@ -152,11 +162,17 @@ class MessageIo(AbstractIo):
         raise ValueError("Invalid option")
 
     def get_player_index(
-        self, player_indexes: list[int], all_player_names: list[str]
+        self,
+        prompt: str,
+        optional: str,
+        player_indexes: list[int],
+        all_player_names: list[str],
     ) -> int | None:
         options = [all_player_names[i] for i in player_indexes]
         self.send_queue.put(
-            _ChoiceEntryRequest(options=options, optional=True).model_dump()
+            _ChoiceEntryRequest(
+                text=prompt, options=options, optional=optional
+            ).model_dump()
         )
         response = _OptionalChoiceEntryResponse.model_validate(self.receive_queue.get())
         player_name = response.value

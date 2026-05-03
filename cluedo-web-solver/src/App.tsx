@@ -22,7 +22,7 @@ const ChoiceEntryRequest = z.object({
   type: z.literal("choice_entry_request"),
   text: z.string(),
   options: z.array(z.string()),
-  optional: z.boolean(),
+  optional: z.nullable(z.string()),
 });
 
 const MultiChoiceEntryRequest = z.object({
@@ -247,7 +247,7 @@ function PlayerNamesEntryForm({ onSubmit }: PlayerNamesEntryFormProps) {
 
 interface ChoiceEntryFormProps {
   options: string[];
-  optional: boolean;
+  optional: string | null;
   onSubmit: (rumor: string | null) => void;
 }
 
@@ -282,7 +282,7 @@ function ChoiceEntryForm({
             onClick={() => handleClick(option)}
             disabled={disabled}
           >
-            {option ?? "No Player"}
+            {option ?? optional}
           </button>
         );
       })}
