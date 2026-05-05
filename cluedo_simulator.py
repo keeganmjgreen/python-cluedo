@@ -15,7 +15,14 @@ from common.agent_utils import (
     BasePlayer,
     UnknownRumor,
 )
-from common.cards import CHARACTERS, ROOMS, WEAPONS, Crime, RumorCard
+from common.cards import (
+    CHARACTERS,
+    ROOMS,
+    WEAPONS,
+    Crime,
+    RumorCard,
+    get_n_cards_per_player,
+)
 from common.consts import MIN_N_PLAYERS
 from common.dashboard import run_dashboard
 from common.smart_bot_agent import SmartBotObserver, SmartBotPlayer
@@ -170,7 +177,7 @@ def set_up_game(
     )
     rumor_deck = shuffled(character_deck + weapon_deck + room_deck)
     n_players = len(player_types)
-    n_cards_per_player = len(rumor_deck) // n_players
+    n_cards_per_player = get_n_cards_per_player(n_players)
     n_extra_cards = len(rumor_deck) % n_players
     extra_cards = [rumor_deck.pop() for _ in range(n_extra_cards)]
     agent_types = list(player_types) + list(observer_types)
@@ -181,14 +188,12 @@ def set_up_game(
             agent = agent_type(
                 agent_index=agent_index,
                 player_indices=player_indices,
-                n_cards_per_player=n_cards_per_player,
                 rumor_cards=[rumor_deck.pop() for _ in range(n_cards_per_player)],
             )
         else:
             agent = agent_type(
                 agent_index=agent_index,
                 player_indices=player_indices,
-                n_cards_per_player=n_cards_per_player,
             )
         agents[agent_index] = agent
     game_setup = GameSetup(

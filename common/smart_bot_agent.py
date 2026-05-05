@@ -23,6 +23,7 @@ from common.cards import (
     WEAPONS,
     Crime,
     RumorCard,
+    get_n_cards_per_player,
 )
 from common.maths import (
     BooleanStatement,
@@ -173,7 +174,7 @@ class SmartBotObserver(BaseObserver):
                         for v, i in variables_to_lits.items()
                         if v.location == player_index
                     ],
-                    bound=self.n_cards_per_player,
+                    bound=get_n_cards_per_player(n_players=len(self.player_indices)),
                     vpool=id_pool,
                 ).clauses  # type: ignore
             )

@@ -39,7 +39,6 @@ class GameLogEntry:
 class BaseAgent(abc.ABC):
     agent_index: AgentIndex
     player_indices: list[AgentIndex]
-    n_cards_per_player: int
 
     game_log: list[GameLogEntry] = dataclasses.field(init=False)
 

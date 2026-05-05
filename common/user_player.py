@@ -1,3 +1,4 @@
+import asyncio
 import dataclasses
 
 from common.agent_utils import BasePlayer
@@ -14,10 +15,12 @@ class UserPlayer(BasePlayer):
     textio: TextIo = dataclasses.field(default_factory=TextIo)
 
     def try_solving_crime(self) -> Crime | None:
-        if self.textio.get_yes_or_no(
-            prompt="Do you want to try solving the crime?",
-            prefix=self._prefix,
-            default=False,
+        if asyncio.run(
+            self.textio.get_yes_or_no(
+                prompt="Do you want to try solving the crime?",
+                prefix=self._prefix,
+                default=False,
+            )
         ):
             return self._get_crime()
 
@@ -32,10 +35,12 @@ class UserPlayer(BasePlayer):
         if len(options) == 1:
             return options.pop()
         else:
-            return self.textio.get_rumor_card(
-                "Select a rumor card in answer to the guess",
-                self._prefix,
-                list(options),
+            return asyncio.run(
+                self.textio.get_rumor_card(
+                    "Select a rumor card in answer to the guess",
+                    self._prefix,
+                    list(options),
+                )
             )
 
     def _get_crime(self) -> Crime:

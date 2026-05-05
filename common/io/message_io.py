@@ -1,10 +1,11 @@
+import asyncio
 import dataclasses
-import queue
 from collections.abc import Sequence
 from typing import Any, Literal, TypeVar, cast
 
 import pydantic
 from pydantic.alias_generators import to_camel
+from socketio import AsyncServer
 
 from common.cards import (
     RUMORS,
@@ -79,20 +80,21 @@ class _MultiChoiceEntryResponse(BaseModel):
 
 @dataclasses.dataclass
 class MessageIo(AbstractIo):
-    send_queue: queue.Queue[dict[str, Any]]
-    receive_queue: queue.Queue[dict[str, Any]]
+    sio: AsyncServer
+    sid: str
+    receive_queue: asyncio.Queue[dict[str, Any]]
 
-    def get_human_player_names(self) -> list[str]:
+    async def get_human_player_names(self) -> list[str]:
         request = _PlayerNamesEntryRequest(text=self._PLAYER_NAMES_PROMPT)
-        self.send_queue.put(request.model_dump())
-        response = _PlayerNamesEntryResponse.model_validate(self.receive_queue.get())
+        await self._send(request.model_dump())
+        response = _PlayerNamesEntryResponse.model_validate(await self._receive())
         return response.player_names
 
-    def get_yes_or_no(
+    async def get_yes_or_no(
         self, prompt: str, prefix: str | None = None, default: bool | None = None
     ) -> bool:
         options = ["yes", "no"]
-        self.send_queue.put(
+        await self._send(
             _ChoiceEntryRequest(
                 text=prompt,
                 options=[
@@ -101,13 +103,14 @@ class MessageIo(AbstractIo):
                 optional=None,
             ).model_dump()
         )
-        response = _RequiredChoiceEntryResponse.model_validate(self.receive_queue.get())
+
+        response = _RequiredChoiceEntryResponse.model_validate(await self._receive())
         if response.value not in options:
             raise ValueError("Invalid option")
         return response.value == "yes"
 
-    def get_extra_cards(self, n_extra_cards: int) -> list[RumorCard]:
-        return self.get_rumor_cards(
+    async def get_extra_cards(self, n_extra_cards: int) -> list[RumorCard]:
+        return await self.get_rumor_cards(
             prompt=(
                 f"Select the {n_extra_cards} extra cards."
                 if n_extra_cards > 1
@@ -116,8 +119,8 @@ class MessageIo(AbstractIo):
             n_rumor_cards=n_extra_cards,
         )
 
-    def get_rumor_cards(self, prompt: str, n_rumor_cards: int) -> list[RumorCard]:
-        self.send_queue.put(
+    async def get_rumor_cards(self, prompt: str, n_rumor_cards: int) -> list[RumorCard]:
+        await self._send(
             _MultiChoiceEntryRequest(
                 text=prompt,
                 options=[
@@ -127,7 +130,8 @@ class MessageIo(AbstractIo):
                 num_selections=n_rumor_cards,
             ).model_dump()
         )
-        response = _MultiChoiceEntryResponse.model_validate(self.receive_queue.get())
+
+        response = _MultiChoiceEntryResponse.model_validate(await self._receive())
         extra_cards: list[RumorCard] = []
         for rumor_name in response.values:
             if (rumor_card := parse_rumor(rumor_name)) is None:
@@ -135,8 +139,8 @@ class MessageIo(AbstractIo):
             extra_cards.append(rumor_card)
         return extra_cards
 
-    def get_game_variant(self) -> GameVariant:
-        self.send_queue.put(
+    async def get_game_variant(self) -> GameVariant:
+        await self._send(
             _ChoiceEntryRequest(
                 text=self._GAME_VARIANT_PROMPT,
                 options=[
@@ -146,10 +150,11 @@ class MessageIo(AbstractIo):
                 optional=None,
             ).model_dump()
         )
-        response = _RequiredChoiceEntryResponse.model_validate(self.receive_queue.get())
+
+        response = _RequiredChoiceEntryResponse.model_validate(await self._receive())
         return GameVariant(response.value)
 
-    def announce_turn(
+    async def announce_turn(
         self, turn_index: int, player_name: str, current_player_is_user: bool
     ) -> None:
         whose_turn = (
@@ -157,18 +162,16 @@ class MessageIo(AbstractIo):
             if current_player_is_user
             else f"{player_name.capitalize()}'s Turn"
         )
-        self.send_queue.put(
-            _Banner(text=f"Turn {turn_index}: {whose_turn}").model_dump()
-        )
+        await self._send(_Banner(text=f"Turn {turn_index}: {whose_turn}").model_dump())
 
-    def get_rumor_card(
+    async def get_rumor_card(
         self, prompt: str, prefix: str | None = None, options: Sequence[T] = RUMORS
     ) -> T:
         if len(options) == 0:
             raise ValueError
         if prefix is not None:
             prompt = f"{prefix}: {prompt}"
-        self.send_queue.put(
+        await self._send(
             _ChoiceEntryRequest(
                 text=prompt,
                 options=[
@@ -178,7 +181,7 @@ class MessageIo(AbstractIo):
                 optional=None,
             ).model_dump()
         )
-        response = _RequiredChoiceEntryResponse.model_validate(self.receive_queue.get())
+        response = _RequiredChoiceEntryResponse.model_validate(await self._receive())
         rumor_card = parse_rumor(rumor_name=response.value)
         if rumor_card is None:
             raise ValueError("Invalid rumor")
@@ -186,7 +189,7 @@ class MessageIo(AbstractIo):
             return cast(T, rumor_card)
         raise ValueError("Invalid option")
 
-    def get_player_index(
+    async def get_player_index(
         self,
         prompt: str,
         optional: str,
@@ -194,7 +197,7 @@ class MessageIo(AbstractIo):
         all_player_names: list[str],
         player_index_of_user: int,
     ) -> int | None:
-        self.send_queue.put(
+        await self._send(
             _ChoiceEntryRequest(
                 text=prompt,
                 options=[
@@ -211,7 +214,8 @@ class MessageIo(AbstractIo):
                 optional=optional.capitalize(),
             ).model_dump()
         )
-        response = _OptionalChoiceEntryResponse.model_validate(self.receive_queue.get())
+
+        response = _OptionalChoiceEntryResponse.model_validate(await self._receive())
         player_name = response.value
         if player_name is None:
             return None
@@ -219,7 +223,15 @@ class MessageIo(AbstractIo):
             raise ValueError("Invalid player name")
         return all_player_names.index(player_name)
 
-    def print_(self, msg: str, prefix: str | None = None, end: str = "\n") -> None:
+    async def print_(
+        self, msg: str, prefix: str | None = None, end: str = "\n"
+    ) -> None:
         if prefix is not None:
             msg = f"{prefix}: {msg}"
-        self.send_queue.put(_PlainMessage(text=msg).model_dump())
+        await self._send(_PlainMessage(text=msg).model_dump())
+
+    async def _send(self, message: dict[str, Any]) -> None:
+        await self.sio.emit("message", message, to=self.sid)
+
+    async def _receive(self) -> dict[str, Any]:
+        return await self.receive_queue.get()

@@ -98,3 +98,7 @@ class Crime(NamedTuple):
 
 
 N_CASE_FILE_CARDS = len(Crime._fields)
+
+
+def get_n_cards_per_player(n_players: int) -> int:
+    return (len(RUMORS) - N_CASE_FILE_CARDS) // n_players

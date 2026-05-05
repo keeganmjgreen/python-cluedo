@@ -1,3 +1,4 @@
+import asyncio
 import dataclasses
 from typing import TextIO
 from unittest.mock import Mock
@@ -8,6 +9,7 @@ from cluedo_assistant import CluedoAssistant
 from common.agent_utils import CardReveal, UnknownRumor
 from common.cards import Character, Crime, Room, Weapon
 from common.consts import GameVariant
+from common.smart_bot_agent import SmartBotObserver
 
 
 @dataclasses.dataclass
@@ -222,15 +224,13 @@ def test_collect_responses(case: Case) -> None:
     textio = Mock(spec=TextIO)
     get_player_index_call_count = 0
 
-    def get_player_index(
+    async def get_player_index(
         prompt: str,
         optional: str,
         player_indexes: list[int],
         all_player_names: list[str],
         player_index_of_user: int,
     ) -> int | None:
-        if "Which player are you?" in prompt:
-            return
         nonlocal get_player_index_call_count
         player_index = (
             case.respondent_indexes[get_player_index_call_count]
@@ -240,14 +240,16 @@ def test_collect_responses(case: Case) -> None:
         get_player_index_call_count += 1
         return player_index
 
-    textio.get_yes_or_no = lambda prompt: False  # type: ignore
-    textio.get_game_variant = lambda: GameVariant.BOTH_SIDES_REVEAL
     textio.get_player_index = get_player_index
-    textio.print_ = lambda: None
-    textio.input_ = lambda: ""
 
     assistant = CluedoAssistant(
-        io=textio, player_names=[f"Player {i}" for i in range(case.n_players)]
+        io=textio,
+        player_names=[f"Player {i}" for i in range(case.n_players)],
+        agent=SmartBotObserver(
+            agent_index=-1, player_indices=list(range(case.n_players))
+        ),
+        reveal_extra_cards_first=False,
+        game_variant=GameVariant.BOTH_SIDES_REVEAL,
     )
     assistant.turn_index = 1
     guess = Crime(Character("plum"), Weapon("ax"), Room("spa"))
@@ -255,7 +257,9 @@ def test_collect_responses(case: Case) -> None:
 
     # Act
 
-    assistant.collect_responses(current_player_name="Player 0", guess=guess)
+    asyncio.run(
+        assistant.collect_responses(current_player_name="Player 0", guess=guess)
+    )
 
     # Assert
 
