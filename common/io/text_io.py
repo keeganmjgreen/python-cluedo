@@ -1,7 +1,7 @@
 import dataclasses
 from collections.abc import Sequence
 from time import sleep
-from typing import cast
+from typing import TypeVar, cast
 
 from common.cards import (
     RUMORS,
@@ -13,6 +13,8 @@ from common.cards import (
 )
 from common.consts import MIN_N_PLAYERS, GameVariant
 from common.io.io import AbstractIo, format_list
+
+T = TypeVar("T", bound=(Character | Weapon | Room))
 
 
 @dataclasses.dataclass
@@ -104,11 +106,12 @@ class TextIo(AbstractIo):
     def announce_turn(
         self, turn_index: int, player_name: str, current_player_is_user: bool
     ) -> None:
-        self.print_(
-            f"It's {'your' if current_player_is_user else f"{player_name.capitalize()}'s"} turn."
+        whose_turn = (
+            "your" if current_player_is_user else f"{player_name.capitalize()}'s"
         )
+        self.print_(f"It's {whose_turn} turn.")
 
-    def get_rumor_card[T: Character | Weapon | Room](
+    def get_rumor_card(
         self, prompt: str, prefix: str | None = None, options: Sequence[T] = RUMORS
     ) -> T:
         if len(options) == 0:

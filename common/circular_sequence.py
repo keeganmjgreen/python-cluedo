@@ -1,12 +1,14 @@
 import dataclasses
 from collections.abc import Sequence
-from typing import Any
+from typing import Any, TypeVar
 
 from common.utils import sign
 
+T = TypeVar("T", bound=Any)
+
 
 @dataclasses.dataclass
-class CircularSequence[T: Any]:
+class CircularSequence:
     items: Sequence[T]
 
     def get_item(self, index: int) -> T:

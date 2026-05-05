@@ -1,9 +1,11 @@
 import abc
 from collections.abc import Sequence
-from typing import Any
+from typing import Any, TypeVar
 
 from common.cards import RUMORS, Character, Room, RumorCard, Weapon
 from common.consts import GameVariant
+
+T = TypeVar("T", bound=(Character | Weapon | Room))
 
 
 class AbstractIo(abc.ABC):
@@ -48,7 +50,7 @@ class AbstractIo(abc.ABC):
         raise NotImplementedError
 
     @abc.abstractmethod
-    def get_rumor_card[T: Character | Weapon | Room](
+    def get_rumor_card(
         self, prompt: str, prefix: str | None = None, options: Sequence[T] = RUMORS
     ) -> T:
         raise NotImplementedError

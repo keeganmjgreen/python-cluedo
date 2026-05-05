@@ -9,7 +9,7 @@ from common.consts import EXTRA_CARDS, ExtraCards
 
 CASE_FILE = "Case File"
 
-type CaseFile = Literal["Case File"]
+CaseFile = Literal["Case File"]
 
 AgentIndex = int
 

@@ -9,8 +9,8 @@ from common.agent_utils import AgentIndex, CaseFile
 from common.cards import RumorCard
 from common.consts import ExtraCards
 
-type Cnf = list[list[int]]
-type CardLocation = AgentIndex | CaseFile | ExtraCards
+Cnf = list[list[int]]
+CardLocation = AgentIndex | CaseFile | ExtraCards
 
 
 class BooleanStatement(abc.ABC):

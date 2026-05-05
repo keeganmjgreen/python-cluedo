@@ -1,7 +1,7 @@
 import dataclasses
 import queue
 from collections.abc import Sequence
-from typing import Any, Literal, cast
+from typing import Any, Literal, TypeVar, cast
 
 import pydantic
 from pydantic.alias_generators import to_camel
@@ -16,6 +16,8 @@ from common.cards import (
 )
 from common.consts import GameVariant
 from common.io.io import AbstractIo
+
+T = TypeVar("T", bound=(Character | Weapon | Room))
 
 
 class BaseModel(pydantic.BaseModel):
@@ -150,13 +152,16 @@ class MessageIo(AbstractIo):
     def announce_turn(
         self, turn_index: int, player_name: str, current_player_is_user: bool
     ) -> None:
+        whose_turn = (
+            "Your Turn"
+            if current_player_is_user
+            else f"{player_name.capitalize()}'s Turn"
+        )
         self.send_queue.put(
-            _Banner(
-                text=f"Turn {turn_index}: {'Your Turn' if current_player_is_user else f"{player_name.capitalize()}'s Turn"}"
-            ).model_dump()
+            _Banner(text=f"Turn {turn_index}: {whose_turn}").model_dump()
         )
 
-    def get_rumor_card[T: Character | Weapon | Room](
+    def get_rumor_card(
         self, prompt: str, prefix: str | None = None, options: Sequence[T] = RUMORS
     ) -> T:
         if len(options) == 0:
