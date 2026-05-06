@@ -738,37 +738,41 @@ wheels = [
 name = "python-cluedo"
 source = { virtual = "." }
 dependencies = [
-    { name = "dash" },
-    { name = "numpy" },
-    { name = "pandas" },
-    { name = "plotly" },
     { name = "pydantic-settings" },
     { name = "python-sat", extra = ["aiger", "pblib"] },
     { name = "python-socketio" },
-    { name = "ruff" },
     { name = "uvicorn" },
 ]
 
 [package.dev-dependencies]
+dashboard = [
+    { name = "dash" },
+    { name = "pandas" },
+    { name = "plotly" },
+]
 dev = [
     { name = "pytest" },
+    { name = "ruff" },
 ]
 
 [package.metadata]
 requires-dist = [
-    { name = "dash", specifier = ">=4.1.0,<5" },
-    { name = "numpy", specifier = ">=2.4.4,<3" },
-    { name = "pandas", specifier = ">=3.0.2,<4" },
-    { name = "plotly", specifier = ">=6.6.0,<7" },
     { name = "pydantic-settings", specifier = ">=2.13.1" },
     { name = "python-sat", extras = ["aiger", "pblib"], specifier = ">=1.9.dev2,<2" },
     { name = "python-socketio", specifier = ">=5.16.1,<6" },
-    { name = "ruff", specifier = ">=0.15.9" },
     { name = "uvicorn", specifier = ">=0.46.0,<0.47" },
 ]
 
 [package.metadata.requires-dev]
-dev = [{ name = "pytest", specifier = ">=9.0.3,<10" }]
+dashboard = [
+    { name = "dash", specifier = ">=4.1.0,<5" },
+    { name = "pandas", specifier = ">=3.0.2,<4" },
+    { name = "plotly", specifier = ">=6.6.0,<7" },
+]
+dev = [
+    { name = "pytest", specifier = ">=9.0.3,<10" },
+    { name = "ruff", specifier = ">=0.15.9" },
+]
 
 [[package]]
 name = "python-dateutil"

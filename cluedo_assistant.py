@@ -6,7 +6,6 @@ from typing import Self, assert_never
 
 from pydantic_settings import BaseSettings, CliApp, SettingsConfigDict
 
-from common import store
 from common.agent_utils import BasePlayer, UnknownRumor
 from common.cards import (
     Character,
@@ -17,7 +16,6 @@ from common.cards import (
 )
 from common.circular_sequence import CircularSequence
 from common.consts import GameVariant
-from common.dashboard import run_dashboard
 from common.io.io import AbstractIo
 from common.io.text_io import TextIo
 from common.smart_bot_agent import SmartBotObserver, SmartBotPlayer, UnsolvableError
@@ -49,6 +47,8 @@ class CluedoAssistant:
         while True:
             for player_name in self.player_names:
                 if dashboard:
+                    from common import store
+
                     probabilities = self.agent.solve_truths_cnf_probabilities(
                         n_samples=N_SAMPLES_FOR_PROBABILITY
                     )
@@ -317,6 +317,8 @@ async def cluedo_assistant(io: AbstractIo, dashboard: bool = False) -> None:
 async def main() -> None:
     cli_settings = _CliSettings.from_cli_args()
     if cli_settings.dashboard:
+        from common.dashboard import run_dashboard
+
         dashboard_thread = run_dashboard()
     else:
         dashboard_thread = None

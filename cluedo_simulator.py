@@ -7,7 +7,6 @@ from typing import Self
 from pydantic import model_validator
 from pydantic_settings import BaseSettings, CliApp, SettingsConfigDict
 
-from common import store
 from common.agent_utils import (
     AgentIndex,
     BaseAgent,
@@ -24,7 +23,6 @@ from common.cards import (
     get_n_cards_per_player,
 )
 from common.consts import MIN_N_PLAYERS
-from common.dashboard import run_dashboard
 from common.smart_bot_agent import SmartBotObserver, SmartBotPlayer
 from common.user_player import UserPlayer
 from common.utils import shuffled
@@ -114,6 +112,8 @@ def run_game(setup: GameSetup, dashboard: bool, reveal_extra_cards_first: bool) 
         for player in setup.players.values():
             if dashboard:
                 for agent in setup.agents.values():
+                    from common import store
+
                     if not isinstance(agent, SmartBotObserver):
                         continue
                     probabilities = agent.solve_truths_cnf_probabilities(
@@ -221,6 +221,8 @@ def cluedo_simulator(
 def main() -> None:
     cli_settings = _CliSettings.from_cli_args()
     if cli_settings.dashboard:
+        from common.dashboard import run_dashboard
+
         dashboard_thread = run_dashboard()
     else:
         dashboard_thread = None
