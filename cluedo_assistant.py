@@ -280,23 +280,26 @@ async def cluedo_assistant(io: AbstractIo, dashboard: bool = False) -> None:
             player_indices=player_indices,
             rumor_cards=player_hand,
         )
-    reveal_extra_cards_first = await io.get_yes_or_no(
-        prompt=(
-            "Based on the number of players, there must be extra cards that "
-            "are neither in the case file nor in any player's hand. "
-            "In observer mode, I must see these extra cards in order to solve "
-            "the crime. "
-            "Would you like to enter these extra cards now? "
-            "If not, you can enter them later; "
-            "I'll let you know when the knowing the extra cards is the only "
-            "thing left I need to solve the crime."
-        ),
-    )
-    if reveal_extra_cards_first:
-        agent.sees_extra_cards(
-            turn_index=0,
-            rumor_cards=await io.get_extra_cards(n_extra_cards=agent.n_extra_cards),
+    if agent.n_extra_cards > 0:
+        reveal_extra_cards_first = await io.get_yes_or_no(
+            prompt=(
+                "Based on the number of players, there must be extra cards that "
+                "are neither in the case file nor in any player's hand. "
+                "In observer mode, I must see these extra cards in order to solve "
+                "the crime. "
+                "Would you like to enter these extra cards now? "
+                "If not, you can enter them later; "
+                "I'll let you know when the knowing the extra cards is the only "
+                "thing left I need to solve the crime."
+            ),
         )
+        if reveal_extra_cards_first:
+            agent.sees_extra_cards(
+                turn_index=0,
+                rumor_cards=await io.get_extra_cards(n_extra_cards=agent.n_extra_cards),
+            )
+    else:
+        reveal_extra_cards_first = False
     cluedo_assistant = CluedoAssistant(
         io=io,
         player_names=player_names,
