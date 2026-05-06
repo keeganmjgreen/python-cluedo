@@ -58,9 +58,9 @@ class TextIo(AbstractIo):
             choice = await self.input_(f"{prompt} ({y}/{n}): ", prefix, lower=True)
             if choice is None:
                 choice = "y" if default is True else "n"
-            if choice.strip() in ["y", "yes"]:
+            if choice in ["y", "yes"]:
                 return True
-            elif choice.strip() in ["n", "no"]:
+            elif choice in ["n", "no"]:
                 return False
             await self.print_("Invalid choice.", prefix)
 
@@ -170,6 +170,7 @@ class TextIo(AbstractIo):
         result = input()
         if pause:
             sleep(self.pause_seconds)
+        result = result.strip()
         if lower:
             result = result.lower()
         return result or None

@@ -174,18 +174,21 @@ function PlayerNamesEntryForm({ onSubmit }: PlayerNamesEntryFormProps) {
   const [disabled, setDisabled] = useState(false);
 
   const handleSubmit = () => {
-    for (const [index, playerName] of playerNames.entries()) {
-      if (playerName === "" && index !== playerNames.length - 1) {
+    const trimmedPlayerNames = playerNames.map((playerName) =>
+      playerName.trim(),
+    );
+    for (const [index, playerName] of trimmedPlayerNames.entries()) {
+      if (playerName === "" && index !== trimmedPlayerNames.length - 1) {
         setAdmonition("It looks like you're missing a player's name.");
         return;
       }
     }
-    if (new Set(playerNames).size < playerNames.length) {
+    if (new Set(trimmedPlayerNames).size < trimmedPlayerNames.length) {
       setAdmonition("Player names must be unique.");
       return;
     }
-    const newPlayerNames = playerNames.filter(
-      (_, i) => i !== playerNames.length - 1,
+    const newPlayerNames = trimmedPlayerNames.filter(
+      (_, i) => i !== trimmedPlayerNames.length - 1,
     );
     setPlayerNames(newPlayerNames);
     onSubmit(newPlayerNames);
