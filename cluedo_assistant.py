@@ -156,9 +156,9 @@ class CluedoAssistant:
         while sum(len(choices) for choices in choiceset) > 0:
             respondent_index = await self.io.get_player_index(
                 prompt=(
-                    "Enter player name (<Enter> if no player)"
+                    "Select a player (<Enter> if no player)"
                     if isinstance(self.io, TextIo)
-                    else ""
+                    else "Select a player."
                 ),
                 optional="no player",
                 player_indexes=sorted({c for choices in choiceset for c in choices}),
