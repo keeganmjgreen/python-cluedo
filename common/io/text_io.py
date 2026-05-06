@@ -57,7 +57,7 @@ class TextIo(AbstractIo):
         while True:
             choice = await self.input_(f"{prompt} ({y}/{n}): ", prefix, lower=True)
             if choice is None:
-                choice = "y" if default is True else "n"
+                choice = "y" if default is True else "n" if default is False else None
             if choice in ["y", "yes"]:
                 return True
             elif choice in ["n", "no"]:
