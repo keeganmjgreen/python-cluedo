@@ -54,7 +54,8 @@ function App() {
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    const socket = io("http://localhost:5005", {
+    const socket = io(window.location.origin, {
+      path: "/socket.io",
       reconnection: true,
       reconnectionDelay: 1000,
       reconnectionAttempts: 5,
