@@ -67,6 +67,12 @@ sudo systemctl start cluedo-web-solver
 
 This ensures that the backend starts automatically when the Raspberry Pi boots.
 
+View logs:
+
+```
+journalctl -u cluedo-web-solver -b --no-pager -n 100
+```
+
 ## Build and deploy the frontend
 
 Run the "Build and Deploy" VS Code task (from `tasks.json`) to build the React app to `cluedo-web-solver/dist/` and `rsync` it to the Raspberry Pi:
