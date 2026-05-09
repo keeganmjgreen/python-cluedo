@@ -14,7 +14,12 @@
             "command": "cd cluedo-web-solver && bun run dev"
         },
         {
-            "label": "Build and Deploy",
+            "label": "Deploy Backend",
+            "type": "shell",
+            "command": "ssh pi@192.168.2.28 'cd ~/python-cluedo/ && git fetch && git reset --hard origin/main && sudo systemctl restart cluedo-web-solver'"
+        },
+        {
+            "label": "Build and Deploy Frontend",
             "type": "shell",
             "command": "cd cluedo-web-solver && bun run build && rsync -av --delete --rsync-path='sudo rsync' dist/ pi@192.168.2.28:/srv/cluedo-web-solver/dist/"
         }
