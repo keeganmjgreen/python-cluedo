@@ -246,7 +246,7 @@ async def cluedo_assistant(io: AbstractIo, dashboard: bool = False) -> None:
         print()
         print_logo()
         sleep(io.pause_seconds)
-    await io.print_("Welcome to the Cluedo assistant!")
+    await io.print_("Welcome to the Cluedo Solver!")
     await io.print_("Give me information about your gameplay by answering my prompts.")
     await io.print_(
         "I'll tell you what the crime was as soon as I've isolated the solution."

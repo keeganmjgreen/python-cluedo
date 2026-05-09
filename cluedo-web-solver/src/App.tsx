@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { io, Socket } from "socket.io-client";
 import z from "zod";
 import "./App.css";
+import assistantCliScreenshot from "./assets/assistant_cli_screenshot.png";
 
 const PlainMessage = z.object({
   type: z.literal("plain_message"),
@@ -108,21 +109,28 @@ function App() {
   return (
     <div className="container">
       <div className="left">
-        <h1>Cluedo Web Solver</h1>
+        <h1>Cluedo Solver</h1>
         <p>
           Beat your friends and family at the classic board game Cluedo (Clue in
           North America). Enter your gameplay to a boolean satisfiability solver
-          and let it solve the crime for you faster than your opponents.
+          and let it solve the crime for you faster than your opponents. Learn
+          more about how it works{" "}
+          <a href="https://keeganmjgreen.github.io/blog/readme/">here</a>.
         </p>
         <p>
-          Learn more about how it works{" "}
-          <a
-            className="link"
-            href="https://keeganmjgreen.github.io/blog/readme/"
-          >
-            here
+          Board games not nerdy enough for you? Try the{" "}
+          <a href="https://github.com/keeganmjgreen/python-cluedo/#cluedo-assistant">
+            Cluedo Solver CLI
           </a>
-          .
+          :
+        </p>
+        <img
+          src={assistantCliScreenshot}
+          style={{ maxWidth: "310px", margin: "0 auto", display: "block" }}
+        ></img>
+        <p>
+          Cluedo Solver is a tool not affiliated with Cluedo, Clue, Hasbro or
+          any other trademark holders.
         </p>
       </div>
       <div className="right">
