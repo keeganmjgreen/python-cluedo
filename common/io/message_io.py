@@ -86,7 +86,7 @@ class MessageIo(AbstractIo):
 
     async def get_human_player_names(self) -> list[str]:
         request = _PlayerNamesEntryRequest(text=self._PLAYER_NAMES_PROMPT)
-        await self._send(request.model_dump())
+        await self._send(request)
         response = _PlayerNamesEntryResponse.model_validate(await self._receive())
         return response.player_names
 
@@ -101,7 +101,7 @@ class MessageIo(AbstractIo):
                     _Option(value=o, display_name=o.capitalize()) for o in options
                 ],
                 optional=None,
-            ).model_dump()
+            )
         )
 
         response = _RequiredChoiceEntryResponse.model_validate(await self._receive())
@@ -128,7 +128,7 @@ class MessageIo(AbstractIo):
                     for o in RUMORS
                 ],
                 num_selections=n_rumor_cards,
-            ).model_dump()
+            )
         )
 
         response = _MultiChoiceEntryResponse.model_validate(await self._receive())
@@ -148,7 +148,7 @@ class MessageIo(AbstractIo):
                     for gv in GameVariant
                 ],
                 optional=None,
-            ).model_dump()
+            )
         )
 
         response = _RequiredChoiceEntryResponse.model_validate(await self._receive())
@@ -162,7 +162,7 @@ class MessageIo(AbstractIo):
             if current_player_is_user
             else f"{player_name.capitalize()}'s Turn"
         )
-        await self._send(_Banner(text=f"Turn {turn_index}: {whose_turn}").model_dump())
+        await self._send(_Banner(text=f"Turn {turn_index}: {whose_turn}"))
 
     async def get_rumor_card(
         self, prompt: str, prefix: str | None = None, options: Sequence[T] = RUMORS
@@ -179,7 +179,7 @@ class MessageIo(AbstractIo):
                     for o in options
                 ],
                 optional=None,
-            ).model_dump()
+            )
         )
         response = _RequiredChoiceEntryResponse.model_validate(await self._receive())
         rumor_card = parse_rumor(rumor_name=response.value)
@@ -212,7 +212,7 @@ class MessageIo(AbstractIo):
                     for i in player_indexes
                 ],
                 optional=optional.capitalize(),
-            ).model_dump()
+            )
         )
 
         response = _OptionalChoiceEntryResponse.model_validate(await self._receive())
@@ -228,10 +228,10 @@ class MessageIo(AbstractIo):
     ) -> None:
         if prefix is not None:
             msg = f"{prefix}: {msg}"
-        await self._send(_PlainMessage(text=msg).model_dump())
+        await self._send(_PlainMessage(text=msg))
 
-    async def _send(self, message: dict[str, Any]) -> None:
-        await self.sio.emit("message", message, to=self.sid)
+    async def _send(self, message: BaseModel) -> None:
+        await self.sio.emit("message", message.model_dump(), to=self.sid)
 
     async def _receive(self) -> dict[str, Any]:
         return await self.receive_queue.get()
