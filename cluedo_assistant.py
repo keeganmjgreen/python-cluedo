@@ -16,6 +16,7 @@ from common.cards import (
 from common.circular_sequence import CircularSequence
 from common.consts import GameVariant
 from common.io.io import AbstractIo
+from common.io.message_io import MessageIo
 from common.io.text_io import TextIo
 from common.smart_bot_agent import SmartBotObserver, SmartBotPlayer, UnsolvableError
 from common.utils import print_logo
@@ -226,6 +227,10 @@ class CluedoAssistant:
         return False
 
     def _try_solving_crime(self) -> bool:
+        if isinstance(self.io, MessageIo) and len(self.io.game_history) > 0:
+            # We weren't able to solve the crime at this point in the game history, and
+            # we shouldn't be able to solve it now again either:
+            return False
         crime = self.agent.try_solving_crime()
         if crime is None:
             return False
