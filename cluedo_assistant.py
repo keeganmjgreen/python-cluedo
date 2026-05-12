@@ -1,4 +1,3 @@
-import asyncio
 import os
 import sys
 from time import sleep
@@ -43,7 +42,7 @@ class CluedoAssistant:
         self.reveal_extra_cards_first = reveal_extra_cards_first
         self.game_variant = game_variant
 
-    async def run(self, dashboard: bool) -> None:
+    def run(self, dashboard: bool) -> None:
         while True:
             for player_name in self.player_names:
                 if dashboard:
@@ -56,7 +55,7 @@ class CluedoAssistant:
                         str(self.agent), self.turn_index, probabilities
                     )
                 self.turn_index += 1
-                if await self._run_turn(current_player_name=player_name):
+                if self._run_turn(current_player_name=player_name):
                     return
                 if (
                     not isinstance(self.agent, BasePlayer)
@@ -68,65 +67,63 @@ class CluedoAssistant:
                         turn_index=self.turn_index
                     )
                     if observer_must_see_extra_cards:
-                        await self.io.print_(
+                        self.io.print_(
                             "Knowing the extra cards is the only thing left I need to "
                             "solve the crime."
                         )
                         self.agent.sees_extra_cards(
                             turn_index=self.turn_index,
-                            rumor_cards=await self.io.get_extra_cards(
+                            rumor_cards=self.io.get_extra_cards(
                                 n_extra_cards=self.n_extra_cards
                             ),
                         )
-                        solved = await self._try_solving_crime()
+                        solved = self._try_solving_crime()
                         if not solved:
-                            await self.io.print_("An unexpected error occurred.")
+                            self.io.print_("An unexpected error occurred.")
                         return
 
-    async def _run_turn(self, current_player_name: str) -> bool:
+    def _run_turn(self, current_player_name: str) -> bool:
         current_player_index = self.player_names.index(current_player_name)
         current_player_is_user = current_player_index == self.agent.agent_index
 
-        await self.io.announce_turn(
+        self.io.announce_turn(
             self.turn_index,
             current_player_name,
             current_player_is_user=current_player_is_user,
         )
 
-        rumor_started = await self.io.get_yes_or_no(
+        rumor_started = self.io.get_yes_or_no(
             f"Did {'you' if current_player_is_user else current_player_name.capitalize()} start a rumor in this turn?"
         )
         if not rumor_started:
             self.agent.add_game_log_entry(turn_index=self.turn_index)
             return False
 
-        guess = await self._get_guess(current_player_name)
+        guess = self._get_guess(current_player_name)
         self.agent.add_game_log_entry(turn_index=self.turn_index, guess=guess)
 
-        await self.io.print_(
-            "Who gave evidence that the suspect, weapon, or room was wrong?"
-        )
-        return await self.collect_responses(current_player_name, guess)
+        self.io.print_("Who gave evidence that the suspect, weapon, or room was wrong?")
+        return self.collect_responses(current_player_name, guess)
 
-    async def _get_guess(self, current_player_name: str) -> Crime:
+    def _get_guess(self, current_player_name: str) -> Crime:
         current_player_index = self.player_names.index(current_player_name)
         current_player_is_user = current_player_index == self.agent.agent_index
 
-        character = await self.io.get_rumor_card(
+        character = self.io.get_rumor_card(
             prompt=f"Which character {'do you' if current_player_is_user else f'does {current_player_name.capitalize()}'} say killed the host?",
             options=Character.instances(),
         )
-        weapon = await self.io.get_rumor_card(
+        weapon = self.io.get_rumor_card(
             prompt=f"Which weapon {'do you' if current_player_is_user else f'does {current_player_name.capitalize()}'} say was used?",
             options=Weapon.instances(),
         )
-        room = await self.io.get_rumor_card(
+        room = self.io.get_rumor_card(
             prompt=f"Which room {'do you' if current_player_is_user else f'does {current_player_name.capitalize()}'} say the murder took place in?",
             options=Room.instances(),
         )
         return Crime(character=character, weapon=weapon, room=room)
 
-    async def collect_responses(self, current_player_name: str, guess: Crime) -> bool:
+    def collect_responses(self, current_player_name: str, guess: Crime) -> bool:
         current_player_index = self.player_names.index(current_player_name)
         seq = CircularSequence(self.player_indices)
         match self.game_variant:
@@ -154,7 +151,7 @@ class CluedoAssistant:
         )
         farthest_player_reached = False
         while sum(len(choices) for choices in choiceset) > 0:
-            respondent_index = await self.io.get_player_index(
+            respondent_index = self.io.get_player_index(
                 prompt=(
                     "Select a player (<Enter> if no player)"
                     if isinstance(self.io, TextIo)
@@ -168,7 +165,7 @@ class CluedoAssistant:
             if respondent_index is None:
                 break
             if current_player_index == self.agent.agent_index:
-                rumor_card = await self.io.get_rumor_card(
+                rumor_card = self.io.get_rumor_card(
                     prompt=(
                         "Which rumor card did "
                         f"{self.player_names[respondent_index].capitalize()} "
@@ -213,7 +210,7 @@ class CluedoAssistant:
                 ]
                 if farthest_player_reached:
                     break
-            if await self._try_solving_crime():
+            if self._try_solving_crime():
                 return True
         all_choices = sorted({c for choices in choiceset for c in choices})
         for choice in all_choices:
@@ -224,37 +221,35 @@ class CluedoAssistant:
                 rumor_card=None,
             )
         if len(all_choices) > 0:
-            if await self._try_solving_crime():
+            if self._try_solving_crime():
                 return True
         return False
 
-    async def _try_solving_crime(self) -> bool:
+    def _try_solving_crime(self) -> bool:
         crime = self.agent.try_solving_crime()
         if crime is None:
             return False
-        await self.io.print_("The Cluedo assistant has solved the case!")
-        await self.io.print_(
+        self.io.print_("The Cluedo assistant has solved the case!")
+        self.io.print_(
             f"The host was killed by {crime.character.name.capitalize()} with the "
             f"{crime.weapon.name.capitalize()} in the {crime.room.name.capitalize()}."
         )
         return True
 
 
-async def cluedo_assistant(io: AbstractIo, dashboard: bool = False) -> None:
+def cluedo_assistant(io: AbstractIo, dashboard: bool = False) -> None:
     if isinstance(io, TextIo):
         os.system("cls" if os.name == "nt" else "clear")
         print()
         print_logo()
         sleep(io.pause_seconds)
-    await io.print_("Welcome to the Cluedo Solver!")
-    await io.print_("Give me information about your gameplay by answering my prompts.")
-    await io.print_(
-        "I'll tell you what the crime was as soon as I've isolated the solution."
-    )
-    player_names = await io.get_human_player_names()
+    io.print_("Welcome to the Cluedo Solver!")
+    io.print_("Give me information about your gameplay by answering my prompts.")
+    io.print_("I'll tell you what the crime was as soon as I've isolated the solution.")
+    player_names = io.get_human_player_names()
     player_indices = list(range(len(player_names)))
     n_cards_per_player = get_n_cards_per_player(n_players=len(player_names))
-    player_index = await io.get_player_index(
+    player_index = io.get_player_index(
         prompt=(
             "Which player are you? (<Enter> if no player if you're just observing)"
             if isinstance(io, TextIo)
@@ -271,7 +266,7 @@ async def cluedo_assistant(io: AbstractIo, dashboard: bool = False) -> None:
             player_indices=player_indices,
         )
     else:
-        player_hand = await io.get_rumor_cards(
+        player_hand = io.get_rumor_cards(
             prompt=f"Which {n_cards_per_player} rumor cards are in your hand?",
             n_rumor_cards=n_cards_per_player,
         )
@@ -281,7 +276,7 @@ async def cluedo_assistant(io: AbstractIo, dashboard: bool = False) -> None:
             rumor_cards=player_hand,
         )
     if agent.n_extra_cards > 0:
-        reveal_extra_cards_first = await io.get_yes_or_no(
+        reveal_extra_cards_first = io.get_yes_or_no(
             prompt=(
                 "Based on the number of players, there must be extra cards that "
                 "are neither in the case file nor in any player's hand. "
@@ -296,7 +291,7 @@ async def cluedo_assistant(io: AbstractIo, dashboard: bool = False) -> None:
         if reveal_extra_cards_first:
             agent.sees_extra_cards(
                 turn_index=0,
-                rumor_cards=await io.get_extra_cards(n_extra_cards=agent.n_extra_cards),
+                rumor_cards=io.get_extra_cards(n_extra_cards=agent.n_extra_cards),
             )
     else:
         reveal_extra_cards_first = False
@@ -305,19 +300,19 @@ async def cluedo_assistant(io: AbstractIo, dashboard: bool = False) -> None:
         player_names=player_names,
         agent=agent,
         reveal_extra_cards_first=reveal_extra_cards_first,
-        game_variant=await io.get_game_variant(),
+        game_variant=io.get_game_variant(),
     )
     try:
-        await cluedo_assistant.run(dashboard)
+        cluedo_assistant.run(dashboard)
     except UnsolvableError:
-        await io.print_(
+        io.print_(
             "Based on the information you've entered during the gameplay, "
             "the crime is unsolvable. "
             "You likely entered a rumor or player response incorrectly."
         )
 
 
-async def main() -> None:
+def main() -> None:
     cli_settings = _CliSettings.from_cli_args()
     if cli_settings.dashboard:
         from common.dashboard import run_dashboard
@@ -325,7 +320,7 @@ async def main() -> None:
         dashboard_thread = run_dashboard()
     else:
         dashboard_thread = None
-    await cluedo_assistant(io=TextIo(), dashboard=cli_settings.dashboard)
+    cluedo_assistant(io=TextIo(), dashboard=cli_settings.dashboard)
     if dashboard_thread is not None:
         dashboard_thread.join()
 
@@ -341,4 +336,4 @@ class _CliSettings(BaseSettings):
 
 
 if __name__ == "__main__":
-    asyncio.run(main())
+    main()

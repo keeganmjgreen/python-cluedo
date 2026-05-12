@@ -1,11 +1,11 @@
-import asyncio
+from __future__ import annotations
+
 import dataclasses
 from collections.abc import Sequence
-from typing import Any, Literal, TypeVar, cast
+from typing import Literal, TypeVar, cast
 
 import pydantic
 from pydantic.alias_generators import to_camel
-from socketio import AsyncServer
 
 from common.cards import (
     RUMORS,
@@ -27,21 +27,30 @@ class BaseModel(pydantic.BaseModel):
     )
 
 
-class _PlainMessage(BaseModel):
+class _BaseMessage(BaseModel):
+    pass
+
+
+class _BaseGameHistoryItem(BaseModel):
+    pass
+
+
+class _PlainMessage(_BaseMessage):
     type: Literal["plain_message"] = "plain_message"
     text: str
 
 
-class _PlayerNamesEntryRequest(BaseModel):
+class _PlayerNamesEntryRequest(_BaseMessage):
     type: Literal["player_names_entry_request"] = "player_names_entry_request"
     text: str
+    response: _PlayerNamesEntryResponse | None = None
 
 
-class _PlayerNamesEntryResponse(BaseModel):
+class _PlayerNamesEntryResponse(_BaseGameHistoryItem):
     player_names: list[str]
 
 
-class _Banner(BaseModel):
+class _Banner(_BaseMessage):
     type: Literal["banner"] = "banner"
     text: str
 
@@ -51,66 +60,78 @@ class _Option(BaseModel):
     display_name: str
 
 
-class _ChoiceEntryRequest(BaseModel):
+class _ChoiceEntryRequest(_BaseMessage):
     type: Literal["choice_entry_request"] = "choice_entry_request"
     text: str = ""
     options: list[_Option]
     optional: str | None
+    response: _ChoiceEntryResponse | None = None
 
 
-class _RequiredChoiceEntryResponse(BaseModel):
-    value: str
-
-
-class _OptionalChoiceEntryResponse(BaseModel):
+class _ChoiceEntryResponse(_BaseGameHistoryItem):
     value: str | None
 
 
-class _MultiChoiceEntryRequest(BaseModel):
+class _MultiChoiceEntryRequest(_BaseMessage):
     type: Literal["multi_choice_entry_request"] = "multi_choice_entry_request"
     text: str = ""
     options: list[_Option]
     num_selections: int
+    response: _MultiChoiceEntryResponse | None = None
 
 
-class _MultiChoiceEntryResponse(BaseModel):
+class _MultiChoiceEntryResponse(_BaseGameHistoryItem):
     type: Literal["multi_choice_entry_response"] = "multi_choice_entry_response"
     values: list[str]
 
 
+Message = (
+    _PlainMessage
+    | _PlayerNamesEntryRequest
+    | _Banner
+    | _ChoiceEntryRequest
+    | _MultiChoiceEntryRequest
+)
+GameHistoryItem = (
+    _PlayerNamesEntryResponse | _ChoiceEntryResponse | _MultiChoiceEntryResponse
+)
+
+
+class GameHistoryExhaustedError(Exception):
+    pass
+
+
 @dataclasses.dataclass
 class MessageIo(AbstractIo):
-    sio: AsyncServer
-    sid: str
-    receive_queue: asyncio.Queue[dict[str, Any]]
+    game_history: list[GameHistoryItem]
+    messages: list[Message] = dataclasses.field(init=False)
 
-    async def get_human_player_names(self) -> list[str]:
+    def __post_init__(self) -> None:
+        self.messages = []
+
+    def get_human_player_names(self) -> list[str]:
         request = _PlayerNamesEntryRequest(text=self._PLAYER_NAMES_PROMPT)
-        await self._send(request)
-        response = _PlayerNamesEntryResponse.model_validate(await self._receive())
-        return response.player_names
+        self._send(request)
+        request.response = _PlayerNamesEntryResponse.model_validate(self._receive())
+        return request.response.player_names
 
-    async def get_yes_or_no(
+    def get_yes_or_no(
         self, prompt: str, prefix: str | None = None, default: bool | None = None
     ) -> bool:
         options = ["yes", "no"]
-        await self._send(
-            _ChoiceEntryRequest(
-                text=prompt,
-                options=[
-                    _Option(value=o, display_name=o.capitalize()) for o in options
-                ],
-                optional=None,
-            )
+        request = _ChoiceEntryRequest(
+            text=prompt,
+            options=[_Option(value=o, display_name=o.capitalize()) for o in options],
+            optional=None,
         )
-
-        response = _RequiredChoiceEntryResponse.model_validate(await self._receive())
-        if response.value not in options:
+        self._send(request)
+        request.response = _ChoiceEntryResponse.model_validate(self._receive())
+        if request.response.value not in options:
             raise ValueError("Invalid option")
-        return response.value == "yes"
+        return request.response.value == "yes"
 
-    async def get_extra_cards(self, n_extra_cards: int) -> list[RumorCard]:
-        return await self.get_rumor_cards(
+    def get_extra_cards(self, n_extra_cards: int) -> list[RumorCard]:
+        return self.get_rumor_cards(
             prompt=(
                 f"Select the {n_extra_cards} extra cards."
                 if n_extra_cards > 1
@@ -119,42 +140,38 @@ class MessageIo(AbstractIo):
             n_rumor_cards=n_extra_cards,
         )
 
-    async def get_rumor_cards(self, prompt: str, n_rumor_cards: int) -> list[RumorCard]:
-        await self._send(
-            _MultiChoiceEntryRequest(
-                text=prompt,
-                options=[
-                    _Option(value=o.name, display_name=o.name.capitalize())
-                    for o in RUMORS
-                ],
-                num_selections=n_rumor_cards,
-            )
+    def get_rumor_cards(self, prompt: str, n_rumor_cards: int) -> list[RumorCard]:
+        request = _MultiChoiceEntryRequest(
+            text=prompt,
+            options=[
+                _Option(value=o.name, display_name=o.name.capitalize()) for o in RUMORS
+            ],
+            num_selections=n_rumor_cards,
         )
-
-        response = _MultiChoiceEntryResponse.model_validate(await self._receive())
+        self._send(request)
+        request.response = _MultiChoiceEntryResponse.model_validate(self._receive())
         extra_cards: list[RumorCard] = []
-        for rumor_name in response.values:
+        for rumor_name in request.response.values:
             if (rumor_card := parse_rumor(rumor_name)) is None:
                 raise ValueError
             extra_cards.append(rumor_card)
         return extra_cards
 
-    async def get_game_variant(self) -> GameVariant:
-        await self._send(
-            _ChoiceEntryRequest(
-                text=self._GAME_VARIANT_PROMPT,
-                options=[
-                    _Option(value=gv.value, display_name=gv.value.capitalize())
-                    for gv in GameVariant
-                ],
-                optional=None,
-            )
+    def get_game_variant(self) -> GameVariant:
+        request = _ChoiceEntryRequest(
+            text=self._GAME_VARIANT_PROMPT,
+            options=[
+                _Option(value=gv.value, display_name=gv.value.capitalize())
+                for gv in GameVariant
+            ],
+            optional=None,
         )
+        self._send(request)
 
-        response = _RequiredChoiceEntryResponse.model_validate(await self._receive())
-        return GameVariant(response.value)
+        request.response = _ChoiceEntryResponse.model_validate(self._receive())
+        return GameVariant(request.response.value)
 
-    async def announce_turn(
+    def announce_turn(
         self, turn_index: int, player_name: str, current_player_is_user: bool
     ) -> None:
         whose_turn = (
@@ -162,34 +179,34 @@ class MessageIo(AbstractIo):
             if current_player_is_user
             else f"{player_name.capitalize()}'s Turn"
         )
-        await self._send(_Banner(text=f"Turn {turn_index}: {whose_turn}"))
+        self._send(_Banner(text=f"Turn {turn_index}: {whose_turn}"))
 
-    async def get_rumor_card(
+    def get_rumor_card(
         self, prompt: str, prefix: str | None = None, options: Sequence[T] = RUMORS
     ) -> T:
         if len(options) == 0:
             raise ValueError
         if prefix is not None:
             prompt = f"{prefix}: {prompt}"
-        await self._send(
-            _ChoiceEntryRequest(
-                text=prompt,
-                options=[
-                    _Option(value=o.name, display_name=o.name.capitalize())
-                    for o in options
-                ],
-                optional=None,
-            )
+        request = _ChoiceEntryRequest(
+            text=prompt,
+            options=[
+                _Option(value=o.name, display_name=o.name.capitalize()) for o in options
+            ],
+            optional=None,
         )
-        response = _RequiredChoiceEntryResponse.model_validate(await self._receive())
-        rumor_card = parse_rumor(rumor_name=response.value)
+        self._send(request)
+        request.response = _ChoiceEntryResponse.model_validate(self._receive())
+        if request.response.value is None:
+            raise ValueError
+        rumor_card = parse_rumor(rumor_name=request.response.value)
         if rumor_card is None:
             raise ValueError("Invalid rumor")
         if rumor_card in options:
             return cast(T, rumor_card)
         raise ValueError("Invalid option")
 
-    async def get_player_index(
+    def get_player_index(
         self,
         prompt: str,
         optional: str,
@@ -197,41 +214,39 @@ class MessageIo(AbstractIo):
         all_player_names: list[str],
         player_index_of_user: int,
     ) -> int | None:
-        await self._send(
-            _ChoiceEntryRequest(
-                text=prompt,
-                options=[
-                    _Option(
-                        value=all_player_names[i],
-                        display_name=(
-                            "Me"
-                            if i == player_index_of_user
-                            else all_player_names[i].capitalize()
-                        ),
-                    )
-                    for i in player_indexes
-                ],
-                optional=optional.capitalize(),
-            )
+        request = _ChoiceEntryRequest(
+            text=prompt,
+            options=[
+                _Option(
+                    value=all_player_names[i],
+                    display_name=(
+                        "Me"
+                        if i == player_index_of_user
+                        else all_player_names[i].capitalize()
+                    ),
+                )
+                for i in player_indexes
+            ],
+            optional=optional.capitalize(),
         )
-
-        response = _OptionalChoiceEntryResponse.model_validate(await self._receive())
-        player_name = response.value
+        self._send(request)
+        request.response = _ChoiceEntryResponse.model_validate(self._receive())
+        player_name = request.response.value
         if player_name is None:
             return None
         elif player_name not in all_player_names:
             raise ValueError("Invalid player name")
         return all_player_names.index(player_name)
 
-    async def print_(
-        self, msg: str, prefix: str | None = None, end: str = "\n"
-    ) -> None:
+    def print_(self, msg: str, prefix: str | None = None, end: str = "\n") -> None:
         if prefix is not None:
             msg = f"{prefix}: {msg}"
-        await self._send(_PlainMessage(text=msg))
+        self._send(_PlainMessage(text=msg))
 
-    async def _send(self, message: BaseModel) -> None:
-        await self.sio.emit("message", message.model_dump(), to=self.sid)
+    def _send(self, message: Message) -> None:
+        self.messages.append(message)
 
-    async def _receive(self) -> dict[str, Any]:
-        return await self.receive_queue.get()
+    def _receive(self) -> GameHistoryItem | None:
+        if len(self.game_history) == 0:
+            raise GameHistoryExhaustedError
+        return self.game_history.pop(0)

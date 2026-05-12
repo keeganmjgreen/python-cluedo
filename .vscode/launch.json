@@ -13,6 +13,13 @@
             "args": [
                 "--n-bot-players=4"
             ]
+        },
+        {
+            "name": "Web Solver Server",
+            "type": "debugpy",
+            "request": "launch",
+            "program": "web_solver_server.py",
+            "console": "integratedTerminal"
         }
     ]
 }

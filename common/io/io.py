@@ -10,7 +10,7 @@ T = TypeVar("T", bound=(Character | Weapon | Room))
 
 class AbstractIo(abc.ABC):
     @abc.abstractmethod
-    async def get_human_player_names(self) -> list[str]:
+    def get_human_player_names(self) -> list[str]:
         raise NotImplementedError
 
     _PLAYER_NAMES_PROMPT = (
@@ -19,21 +19,21 @@ class AbstractIo(abc.ABC):
     )
 
     @abc.abstractmethod
-    async def get_yes_or_no(
+    def get_yes_or_no(
         self, prompt: str, prefix: str | None = None, default: bool | None = None
     ) -> bool:
         raise NotImplementedError
 
     @abc.abstractmethod
-    async def get_extra_cards(self, n_extra_cards: int) -> list[RumorCard]:
+    def get_extra_cards(self, n_extra_cards: int) -> list[RumorCard]:
         raise NotImplementedError
 
     @abc.abstractmethod
-    async def get_rumor_cards(self, prompt: str, n_rumor_cards: int) -> list[RumorCard]:
+    def get_rumor_cards(self, prompt: str, n_rumor_cards: int) -> list[RumorCard]:
         raise NotImplementedError
 
     @abc.abstractmethod
-    async def get_game_variant(self) -> GameVariant:
+    def get_game_variant(self) -> GameVariant:
         raise NotImplementedError
 
     _GAME_VARIANT_PROMPT = (
@@ -44,19 +44,19 @@ class AbstractIo(abc.ABC):
     )
 
     @abc.abstractmethod
-    async def announce_turn(
+    def announce_turn(
         self, turn_index: int, player_name: str, current_player_is_user: bool
     ) -> None:
         raise NotImplementedError
 
     @abc.abstractmethod
-    async def get_rumor_card(
+    def get_rumor_card(
         self, prompt: str, prefix: str | None = None, options: Sequence[T] = RUMORS
     ) -> T:
         raise NotImplementedError
 
     @abc.abstractmethod
-    async def get_player_index(
+    def get_player_index(
         self,
         prompt: str,
         optional: str,
@@ -67,9 +67,7 @@ class AbstractIo(abc.ABC):
         raise NotImplementedError
 
     @abc.abstractmethod
-    async def print_(
-        self, msg: str, prefix: str | None = None, end: str = "\n"
-    ) -> None:
+    def print_(self, msg: str, prefix: str | None = None, end: str = "\n") -> None:
         raise NotImplementedError
 
 
