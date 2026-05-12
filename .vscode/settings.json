@@ -29,6 +29,7 @@
         "satisfiability",
         "scriptsize",
         "sendfile",
+        "setuptools",
         "socketio",
         "Tseitin",
         "unsubmitted",
