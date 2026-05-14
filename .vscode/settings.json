@@ -4,11 +4,13 @@
     },
     "cSpell.words": [
         "aiger",
+        "autorange",
         "choiceset",
         "cloudflared",
         "Cluedo",
         "cluedosolver",
         "dpkg",
+        "dtick",
         "fastapi",
         "imshow",
         "journalctl",
@@ -31,13 +33,16 @@
         "sendfile",
         "setuptools",
         "socketio",
+        "tickangle",
         "Tseitin",
         "unsubmitted",
         "uvicorn",
         "venv",
         "vpool",
         "xaxes",
-        "yaxes"
+        "xaxis",
+        "yaxes",
+        "yaxis"
     ],
     "editor.codeActionsOnSave": {
         "source.fixAll": "explicit",

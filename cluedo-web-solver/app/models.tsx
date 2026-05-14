@@ -58,7 +58,18 @@ const Message = z.union([
   MultiChoiceEntryRequest,
 ]);
 export type MessageType = z.infer<typeof Message>;
-export const GameData = z.object({ messages: z.array(Message) });
+
+const ProbabilitiesData = z.object({
+  matrix: z.array(z.array(z.number())),
+  cols: z.array(z.string()),
+  rows: z.array(z.string()),
+});
+
+export const GameData = z.object({
+  messages: z.array(Message),
+  latestProbabilitiesData: z.nullable(ProbabilitiesData),
+});
+export type GameDataType = z.infer<typeof GameData>;
 
 export const GameHistoryItem = z.union([
   PlayerNamesEntryResponse,

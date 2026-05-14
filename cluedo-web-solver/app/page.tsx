@@ -1,5 +1,5 @@
 import z from "zod";
-import { getMessages } from "./api";
+import { getGameData } from "./api";
 import { ClientGameplayBox } from "./clientGameplayBox";
 import { GAME_HISTORY_PARAM } from "./consts";
 import { bodyFont, headingFont } from "./fonts";
@@ -49,8 +49,8 @@ async function GameplayBox(props: {
   const gameHistory = sp[GAME_HISTORY_PARAM]
     ? JSON.parse(sp[GAME_HISTORY_PARAM])
     : [];
-  const messages = await getMessages(
+  const gameData = await getGameData(
     z.array(GameHistoryItem).parse(gameHistory),
   );
-  return <ClientGameplayBox messages={messages} />;
+  return <ClientGameplayBox gameData={gameData} />;
 }

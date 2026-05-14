@@ -205,7 +205,9 @@ class SmartBotObserver(BaseObserver):
                 from_clauses=shuffled([shuffled(lits) for lits in random_clauses])
             )
             with Solver(bootstrap_with=cnf) as solver:
-                solver.solve()  # type: ignore
+                solvable = solver.solve()  # type: ignore
+                if not solvable:
+                    raise UnsolvableError
                 solution = cast(list[int], solver.get_model())
             random2orig_lit_index_mapping = {
                 v: k for k, v in orig2random_lit_index_mapping.items()

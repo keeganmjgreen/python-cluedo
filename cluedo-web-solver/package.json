@@ -10,13 +10,16 @@
   },
   "dependencies": {
     "next": "16.2.6",
+    "plotly.js-basic-dist-min": "^3.5.1",
     "react": "19.2.4",
     "react-dom": "19.2.4",
+    "react-plotly.js": "^2.6.0",
     "zod": "^4.4.3"
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4",
     "@types/node": "^20",
+    "@types/plotly.js": "^3.0.10",
     "@types/react": "^19",
     "@types/react-dom": "^19",
     "eslint": "^9",

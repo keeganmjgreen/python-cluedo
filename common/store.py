@@ -25,6 +25,7 @@ def append_probabilities(
     agent: str,
     turn_index: int,
     probabilities: dict[CardIsInLocation, float],
+    player_names: list[str],
 ) -> None:
     global _probabilities_df
     append_df = pd.DataFrame(
@@ -33,7 +34,7 @@ def append_probabilities(
                 AGENT: str(agent),
                 TURN_INDEX: turn_index,
                 CARD_LOCATION: (
-                    f"Player {v.location}"
+                    player_names[v.location]
                     if isinstance(v.location, int)
                     else v.location
                 ),

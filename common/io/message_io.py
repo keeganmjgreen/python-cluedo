@@ -17,6 +17,7 @@ from common.cards import (
 )
 from common.consts import GameVariant
 from common.io.io import AbstractIo
+from common.maths import CardIsInLocation
 
 T = TypeVar("T", bound=(Character | Weapon | Room))
 
@@ -105,6 +106,7 @@ class GameHistoryExhaustedError(Exception):
 class MessageIo(AbstractIo):
     game_history: list[GameHistoryItem]
     messages: list[Message] = dataclasses.field(init=False)
+    latest_probabilities: dict[CardIsInLocation, float] | None = None
 
     def __post_init__(self) -> None:
         self.messages = []

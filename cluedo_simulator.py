@@ -101,7 +101,7 @@ def run_turn(
                 players_pos_delta += 1
 
 
-def run_game(setup: GameSetup, dashboard: bool, reveal_extra_cards_first: bool) -> None:
+def run_game(setup: GameSetup, p_heatmap: bool, reveal_extra_cards_first: bool) -> None:
     n_extra_cards = len(setup.extra_cards)
     turn_index = 0
     for agent in setup.agents.values():
@@ -110,7 +110,7 @@ def run_game(setup: GameSetup, dashboard: bool, reveal_extra_cards_first: bool) 
     won_agent_indices: list[AgentIndex] = []
     while True:
         for player in setup.players.values():
-            if dashboard:
+            if p_heatmap:
                 for agent in setup.agents.values():
                     from common import store
 
@@ -119,7 +119,14 @@ def run_game(setup: GameSetup, dashboard: bool, reveal_extra_cards_first: bool) 
                     probabilities = agent.solve_truths_cnf_probabilities(
                         n_samples=N_SAMPLES_FOR_PROBABILITY
                     )
-                    store.append_probabilities(str(agent), turn_index, probabilities)
+                    store.append_probabilities(
+                        str(agent),
+                        turn_index,
+                        probabilities,
+                        player_names=[
+                            f"Player {i + 1}'s Hand" for i in range(len(setup.players))
+                        ],
+                    )
                     sleep(0.1)
             turn_index += 1
             run_turn(turn_index, setup.players, player.agent_index, setup.observers)
@@ -207,20 +214,20 @@ def set_up_game(
 def cluedo_simulator(
     player_types: Sequence[type[BasePlayer]],
     observer_types: Sequence[type[BaseObserver]] = (),
-    dashboard: bool = False,
+    p_heatmap: bool = False,
     reveal_extra_cards_first: bool = False,
 ) -> None:
     game_setup = set_up_game(player_types=player_types, observer_types=observer_types)
     run_game(
         setup=game_setup,
-        dashboard=dashboard,
+        p_heatmap=p_heatmap,
         reveal_extra_cards_first=reveal_extra_cards_first,
     )
 
 
 def main() -> None:
     cli_settings = _CliSettings.from_cli_args()
-    if cli_settings.dashboard:
+    if cli_settings.p_heatmap:
         from common.dashboard import run_dashboard
 
         dashboard_thread = run_dashboard()
@@ -232,7 +239,7 @@ def main() -> None:
             + [UserPlayer] * cli_settings.n_human_players
         ),
         observer_types=([SmartBotObserver] if cli_settings.include_observer else []),
-        dashboard=cli_settings.dashboard,
+        p_heatmap=cli_settings.p_heatmap,
         reveal_extra_cards_first=cli_settings.reveal_extra_cards_first,
     )
     if dashboard_thread is not None:
@@ -245,7 +252,7 @@ class _CliSettings(BaseSettings):
     n_bot_players: int = 0
     n_human_players: int = 0
     include_observer: bool = False
-    dashboard: bool = False
+    p_heatmap: bool = False
     reveal_extra_cards_first: bool = False
 
     @model_validator(mode="after")

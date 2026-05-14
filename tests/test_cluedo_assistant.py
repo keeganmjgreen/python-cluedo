@@ -1,11 +1,10 @@
-import asyncio
 import dataclasses
 from typing import TextIO
 from unittest.mock import Mock
 
 import pytest
 
-from cluedo_assistant import CluedoAssistant
+from cluedo_assistant import CluedoAssistantSetup, collect_responses
 from common.agent_utils import CardReveal, UnknownRumor
 from common.cards import Character, Crime, Room, Weapon
 from common.consts import GameVariant
@@ -224,7 +223,7 @@ def test_collect_responses(case: Case) -> None:
     textio = Mock(spec=TextIO)
     get_player_index_call_count = 0
 
-    async def get_player_index(
+    def get_player_index(
         prompt: str,
         optional: str,
         player_indexes: list[int],
@@ -242,7 +241,7 @@ def test_collect_responses(case: Case) -> None:
 
     textio.get_player_index = get_player_index
 
-    assistant = CluedoAssistant(
+    setup = CluedoAssistantSetup(
         io=textio,
         player_names=[f"Player {i}" for i in range(case.n_players)],
         agent=SmartBotObserver(
@@ -251,25 +250,22 @@ def test_collect_responses(case: Case) -> None:
         reveal_extra_cards_first=False,
         game_variant=GameVariant.BOTH_SIDES_REVEAL,
     )
-    assistant.turn_index = 1
     guess = Crime(Character("plum"), Weapon("ax"), Room("spa"))
-    assistant.agent.add_game_log_entry(turn_index=assistant.turn_index, guess=guess)
+    setup.agent.add_game_log_entry(turn_index=1, guess=guess)
 
     # Act
 
-    asyncio.run(
-        assistant.collect_responses(current_player_name="Player 0", guess=guess)
-    )
+    collect_responses(setup, turn_index=1, current_player_name="Player 0", guess=guess)
 
     # Assert
 
     assert get_player_index_call_count == case.expected_n_prompts
-    assert len(assistant.agent.game_log) == 2
-    assert assistant.agent.game_log[1].turn_index == 1
-    assert assistant.agent.game_log[1].guess == guess
+    assert len(setup.agent.game_log) == 2
+    assert setup.agent.game_log[1].turn_index == 1
+    assert setup.agent.game_log[1].guess == guess
     assert (
         sorted(
-            assistant.agent.game_log[1].card_reveals,
+            setup.agent.game_log[1].card_reveals,
             key=(lambda cr: cr.other_player_index),
         )
         == case.expected_card_reveals

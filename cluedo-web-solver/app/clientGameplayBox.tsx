@@ -1,5 +1,6 @@
 "use client";
 
+import dynamic from "next/dynamic";
 import { JSX, useEffect, useRef } from "react";
 import { headingFont } from "./fonts";
 import {
@@ -7,21 +8,61 @@ import {
   MultiChoiceEntryForm,
   PlayerNamesEntryForm,
 } from "./forms";
-import { MessageType } from "./models";
+import { GameDataType, MessageType } from "./models";
 
-export function ClientGameplayBox(props: { messages: Array<MessageType> }) {
+const Plot = dynamic(() => import("react-plotly.js"), {
+  ssr: false,
+});
+
+export function ClientGameplayBox(props: { gameData: GameDataType }) {
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   // Auto-scroll to bottom / last message:
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [props.messages]);
+  }, [props.gameData.messages]);
+
+  const plot: JSX.Element = props.gameData.latestProbabilitiesData ? (
+    <Plot
+      data={[
+        {
+          z: props.gameData.latestProbabilitiesData.matrix,
+          x: props.gameData.latestProbabilitiesData.cols,
+          y: props.gameData.latestProbabilitiesData.rows,
+          type: "heatmap",
+          zmin: 0,
+          zmax: 1,
+        },
+      ]}
+      layout={{
+        xaxis: { tickangle: 90, dtick: 1 },
+        yaxis: {
+          autorange: "reversed",
+        },
+        title: {
+          text: "Approximate Probabilities<br>of each rumor card being in each location",
+        },
+        font: {
+          family: "IBM Plex Sans",
+          color: "#808080",
+        },
+        plot_bgcolor: "rgba(0,0,0,0)",
+        paper_bgcolor: "rgba(0,0,0,0)",
+      }}
+      style={{ width: "100%", height: "100%" }}
+    />
+  ) : (
+    <div className={headingFont.className}>
+      Approximate probabilities will display here once the game has begun.
+    </div>
+  );
 
   return (
     <>
-      {props.messages.map((message, messageIndex) => (
+      {props.gameData.messages.map((message, messageIndex) => (
         <div key={messageIndex}>{messageToComponent(message)}</div>
       ))}
+      {plot}
       <div ref={messagesEndRef} />
     </>
   );

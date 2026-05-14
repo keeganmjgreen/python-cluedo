@@ -783,14 +783,15 @@ dependencies = [
 ]
 
 [package.dev-dependencies]
-dashboard = [
+dev = [
+    { name = "pandas" },
+    { name = "pytest" },
+    { name = "ruff" },
+]
+p-heatmap = [
     { name = "dash" },
     { name = "pandas" },
     { name = "plotly" },
-]
-dev = [
-    { name = "pytest" },
-    { name = "ruff" },
 ]
 
 [package.metadata]
@@ -802,14 +803,15 @@ requires-dist = [
 ]
 
 [package.metadata.requires-dev]
-dashboard = [
+dev = [
+    { name = "pandas", specifier = ">=3.0.2" },
+    { name = "pytest", specifier = ">=9.0.3,<10" },
+    { name = "ruff", specifier = ">=0.15.9" },
+]
+p-heatmap = [
     { name = "dash", specifier = ">=4.1.0,<5" },
     { name = "pandas", specifier = ">=3.0.2,<4" },
     { name = "plotly", specifier = ">=6.6.0,<7" },
-]
-dev = [
-    { name = "pytest", specifier = ">=9.0.3,<10" },
-    { name = "ruff", specifier = ">=0.15.9" },
 ]
 
 [[package]]

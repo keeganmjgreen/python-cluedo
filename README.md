@@ -42,10 +42,10 @@ Humans playing the game receive gameplay information from the simulation and ent
 With only bot players, one simulated game takes only seconds and some twenty turns before _every_ bot has solved the crime. Each game setup and gameplay has random elements, but by running multiple simulated games, luck-of-the-draw is ruled out and different strategies of bots can be compared.
 
 ```sh
-uv run cluedo_simulator.py --n-bot-players 4 --include-observer [--dashboard]
+uv run cluedo_simulator.py --n-bot-players 4 --include-observer [--p-heatmap]
 ```
 
-Note: `--dashboard` requires installing the `dashboard` extra.
+Note: `--p-heatmap` requires installing the `p-heatmap` extra.
 
 ## Cluedo assistant
 
@@ -54,10 +54,10 @@ Not unlike the Cluedo simulator, the Cluedo assistant allows bot–human interac
 You serve as the eyes, ears, and hands of the Cluedo assistant. While you're sneakily typing in the rumors that other players are starting and answering, the assistant's role is to take the guesswork (and fun) out of the game. By solving the crime for you as quickly as possible, the assistant brings family game night to a premature and bitter end.
 
 ```sh
-uv run cluedo_assistant.py [--dashboard]
+uv run cluedo_assistant.py [--p-heatmap]
 ```
 
-Note: `--dashboard` requires installing the `dashboard` extra.
+Note: `--p-heatmap` requires installing the `p-heatmap` extra.
 
 ## Getting started
 
@@ -71,7 +71,7 @@ You can use the Cluedo simulator or Cluedo assistant _right now_ by following [t
 
 ## Dashboard
 
-The `--dashboard` CLI flag opens the `python-cluedo` dashboard. The dashboard shows, from the perspective of each bot, the approximate probabilities of each rumor card being in each possible location (in a player's hand, in the "case file", or among the extra cards). The dashboard updates in real time as the game progresses, allowing you to see how each bot narrows down the contents of the case file.
+The `--p-heatmap` CLI flag opens the `python-cluedo` dashboard. The dashboard shows, from the perspective of each bot, the approximate probabilities of each rumor card being in each possible location (in a player's hand, in the "case file", or among the extra cards). The dashboard updates in real time as the game progresses, allowing you to see how each bot narrows down the contents of the case file.
 
 ![](docs/dashboard.png)
 
