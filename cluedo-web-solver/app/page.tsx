@@ -28,7 +28,7 @@ export default async function Home(props: {
         </p>
         <img
           src="/assistant_cli_screenshot.png"
-          style={{ maxWidth: "310px", margin: "0 auto", display: "block" }}
+          style={{ maxWidth: "300px", margin: "0 auto", display: "block" }}
         ></img>
         <p>
           Cluedo Solver is a tool not affiliated with Cluedo, Clue, Hasbro or
