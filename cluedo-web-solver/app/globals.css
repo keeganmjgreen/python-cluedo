@@ -30,11 +30,11 @@ a {
 
 .container {
   display: flex;
-  height: 100vh;
 }
 
 .container .left,
-.container .right {
+.container .right .top-right,
+.container .right .bottom-right {
   padding: 50px;
   box-sizing: border-box;
 }
@@ -43,10 +43,15 @@ a {
   line-height: 125%;
 }
 
-.container .right {
+.container .right .top-right,
+.container .right .bottom-right {
   background-color: var(--intense-background-color);
   border-radius: 10px;
   margin: 10px;
+}
+
+.container .right .bottom-right {
+  margin-top: 0;
 }
 
 .container .right h2 {
@@ -57,6 +62,7 @@ a {
 /* Two-column layout on desktop. */
 @media (min-width: 1000px) {
   .container {
+    height: 100vh;
     max-width: 1000px;
     /* Center horizontally. */
     margin: 0 auto;
@@ -69,8 +75,17 @@ a {
 
   .container .right {
     flex: 1 0 60%;
-    /* Right column is a scroll region. */
+    display: flex;
+    flex-direction: column;
+  }
+
+  .container .right .top-right {
+    flex: 1;
     overflow: scroll;
+  }
+
+  .container .right .bottom-right {
+    flex: 0 0 400px;
   }
 }
 
@@ -89,7 +104,18 @@ a {
 
   .container .right {
     /* Fill remaining vertical space. */
+    height: 100vh;
+    display: flex;
+    flex-direction: column;
+  }
+
+  .container .right .top-right {
     flex: 1;
+    overflow: scroll;
+  }
+
+  .container .right .bottom-right {
+    height: 400px;
   }
 }
 

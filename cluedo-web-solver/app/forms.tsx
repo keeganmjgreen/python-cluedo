@@ -227,5 +227,5 @@ function updateGameHistory(
       newGameHistoryItem,
     ]),
   );
-  router.push(`?${params.toString()}`);
+  router.push(`?${params.toString()}`, { scroll: false });
 }
