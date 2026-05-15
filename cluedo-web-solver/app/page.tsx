@@ -20,6 +20,11 @@ export default async function Home(props: {
           <a href="https://keeganmjgreen.github.io/blog/readme/">here</a>.
         </p>
         <p>
+          Game data is stored in the URL &ndash; no cookies required. To save
+          your game, simply bookmark the site. Use your browser's back/forward
+          buttons to undo/redo game history.
+        </p>
+        <p>
           Board games not nerdy enough for you? Try the{" "}
           <a href="https://github.com/keeganmjgreen/python-cluedo/#cluedo-assistant">
             Cluedo Solver CLI
