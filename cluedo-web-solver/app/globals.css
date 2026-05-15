@@ -32,29 +32,29 @@ a {
   display: flex;
 }
 
-.container .left,
-.container .right .top-right,
-.container .right .bottom-right {
+.container .info-box,
+.container .gameplay-box .gameplay-messages,
+.container .gameplay-box .gameplay-probabilities {
   padding: 50px;
   box-sizing: border-box;
 }
 
-.container .left h1 {
+.container .info-box h1 {
   line-height: 125%;
 }
 
-.container .right .top-right,
-.container .right .bottom-right {
+.container .gameplay-box .gameplay-messages,
+.container .gameplay-box .gameplay-probabilities {
   background-color: var(--intense-background-color);
   border-radius: 10px;
   margin: 10px;
 }
 
-.container .right .bottom-right {
+.container .gameplay-box .gameplay-probabilities {
   margin-top: 0;
 }
 
-.container .right h2 {
+.container .gameplay-box h2 {
   border-top: 1px solid #80808080;
   padding-top: 10px;
 }
@@ -69,22 +69,22 @@ a {
     flex-direction: row;
   }
 
-  .container .left {
+  .container .info-box {
     flex: 1 0 40%;
   }
 
-  .container .right {
+  .container .gameplay-box {
     flex: 1 0 60%;
     display: flex;
     flex-direction: column;
   }
 
-  .container .right .top-right {
+  .container .gameplay-box .gameplay-messages {
     flex: 1;
     overflow: scroll;
   }
 
-  .container .right .bottom-right {
+  .container .gameplay-box .gameplay-probabilities {
     flex: 0 0 400px;
   }
 }
@@ -97,24 +97,24 @@ a {
     overflow: scroll;
   }
 
-  .container .left {
+  .container .info-box {
     /* Vertically fit content. */
     flex: 0 0 content;
   }
 
-  .container .right {
+  .container .gameplay-box {
     /* Fill remaining vertical space. */
     height: 100vh;
     display: flex;
     flex-direction: column;
   }
 
-  .container .right .top-right {
+  .container .gameplay-box .gameplay-messages {
     flex: 1;
     overflow: scroll;
   }
 
-  .container .right .bottom-right {
+  .container .gameplay-box .gameplay-probabilities {
     height: 400px;
   }
 }

@@ -59,13 +59,13 @@ export function ClientGameplayBox(props: { gameData: GameDataType }) {
 
   return (
     <>
-      <div className="top-right">
+      <div className="gameplay-messages">
         {props.gameData.messages.map((message, messageIndex) => (
           <div key={messageIndex}>{messageToComponent(message)}</div>
         ))}
         <div ref={messagesEndRef} />
       </div>
-      <div className="bottom-right">{plot}</div>
+      <div className="gameplay-probabilities">{plot}</div>
     </>
   );
 }

@@ -10,7 +10,7 @@ export default async function Home(props: {
 }) {
   return (
     <div className={`container ${bodyFont.className}`}>
-      <div className="left">
+      <div className="info-box">
         <h1 className={headingFont.className}>Cluedo Solver</h1>
         <p>
           Beat your friends and family at the classic board game Cluedo (Clue in
@@ -35,7 +35,7 @@ export default async function Home(props: {
           any other trademark holders.
         </p>
       </div>
-      <div className="right">
+      <div className="gameplay-box">
         <GameplayBox searchParams={props.searchParams} />
       </div>
     </div>
