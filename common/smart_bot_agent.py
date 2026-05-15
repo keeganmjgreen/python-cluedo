@@ -10,6 +10,7 @@ from pysat.solvers import Solver  # type: ignore
 from common.agent_utils import (
     CASE_FILE,
     EXTRA_CARDS,
+    AgentIndex,
     BaseObserver,
     BasePlayer,
     UnknownRumor,
@@ -25,6 +26,9 @@ from common.cards import (
     RumorCard,
     get_n_cards_per_player,
 )
+from common.consts import ExtraCards
+from common.io.io import AbstractIo
+from common.io.message_io import MessageIo
 from common.maths import (
     BooleanStatement,
     CardIsInLocation,
@@ -69,12 +73,28 @@ class SmartBotObserver(BaseObserver):
         super().__post_init__()
         self._free_case_file_variables = {}
 
+    def sees_card(
+        self,
+        turn_index: int,
+        other_player_index: AgentIndex | ExtraCards,
+        rumor_card: RumorCard | UnknownRumor | None,
+        io: AbstractIo | None,
+    ) -> None:
+        prev_statements = self.game_log_to_boolean_statements()
+        super().sees_card(turn_index, other_player_index, rumor_card, io)
+        next_statements = self.game_log_to_boolean_statements()
+        if isinstance(io, MessageIo):
+            io.send_boolean_statements(
+                boolean_statements=list(set(next_statements) - set(prev_statements)),
+                player_names=self.player_names,
+            )
+
     @property
     def n_extra_cards(self) -> int:
-        n_players = len(self.player_indices)
+        n_players = len(self.player_names)
         return (len(RUMORS) - N_CASE_FILE_CARDS) % n_players
 
-    def _game_log_to_boolean_statements(self) -> list[BooleanStatement]:
+    def game_log_to_boolean_statements(self) -> list[BooleanStatement]:
         statements: list[BooleanStatement] = []
 
         # General knowledge of the game:
@@ -92,7 +112,11 @@ class SmartBotObserver(BaseObserver):
 
         # Each rumor card is owned by exactly one of the players including the case file
         # and extra cards.
-        locs: list[CardLocation] = [*self.player_indices, CASE_FILE, EXTRA_CARDS]
+        locs: list[CardLocation] = [
+            *self.player_indices,
+            CASE_FILE,
+            EXTRA_CARDS,
+        ]
         for rumor_card in RUMORS:
             statements.append(
                 Xor(
@@ -151,7 +175,11 @@ class SmartBotObserver(BaseObserver):
     def _get_all_variables(
         self,
     ) -> dict[CardIsInLocation, int]:
-        locs: list[CardLocation] = [*self.player_indices, CASE_FILE, EXTRA_CARDS]
+        locs: list[CardLocation] = [
+            *self.player_indices,
+            CASE_FILE,
+            EXTRA_CARDS,
+        ]
         all_variables = [
             CardIsInLocation(rumor_card, loc) for loc in locs for rumor_card in RUMORS
         ]
@@ -174,7 +202,7 @@ class SmartBotObserver(BaseObserver):
                         for v, i in variables_to_lits.items()
                         if v.location == player_index
                     ],
-                    bound=get_n_cards_per_player(n_players=len(self.player_indices)),
+                    bound=get_n_cards_per_player(n_players=len(self.player_names)),
                     vpool=id_pool,
                 ).clauses  # type: ignore
             )
@@ -186,7 +214,7 @@ class SmartBotObserver(BaseObserver):
 
     def solve_truths_cnf_probabilities(self, n_samples: int = 10):
         all_variables = self._get_all_variables()
-        statements = self._game_log_to_boolean_statements()
+        statements = self.game_log_to_boolean_statements()
         clauses, n_lits = self._boolean_statements_to_cnf_clauses(
             statements, variables_to_lits=all_variables
         )
@@ -247,7 +275,7 @@ class SmartBotObserver(BaseObserver):
         self,
     ) -> tuple[dict[CardIsInLocation, bool] | None, list[CardIsInLocation]]:
         all_variables = self._get_all_variables()
-        statements = self._game_log_to_boolean_statements()
+        statements = self.game_log_to_boolean_statements()
         clauses, _ = self._boolean_statements_to_cnf_clauses(
             statements, variables_to_lits=all_variables
         )
@@ -353,8 +381,8 @@ class SmartBotPlayer(BasePlayer, SmartBotObserver):
                     return rumor_card
         return None
 
-    def _game_log_to_boolean_statements(self) -> list[BooleanStatement]:
-        statements = super()._game_log_to_boolean_statements()
+    def game_log_to_boolean_statements(self) -> list[BooleanStatement]:
+        statements = super().game_log_to_boolean_statements()
 
         # Player knowledge of the game instance:
 

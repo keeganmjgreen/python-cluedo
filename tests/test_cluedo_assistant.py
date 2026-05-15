@@ -241,12 +241,11 @@ def test_collect_responses(case: Case) -> None:
 
     textio.get_player_index = get_player_index
 
+    player_names = [f"Player {i}" for i in range(case.n_players)]
     setup = CluedoAssistantSetup(
         io=textio,
-        player_names=[f"Player {i}" for i in range(case.n_players)],
-        agent=SmartBotObserver(
-            agent_index=-1, player_indices=list(range(case.n_players))
-        ),
+        player_names=player_names,
+        agent=SmartBotObserver(agent_index=-1, player_names=player_names),
         reveal_extra_cards_first=False,
         game_variant=GameVariant.BOTH_SIDES_REVEAL,
     )

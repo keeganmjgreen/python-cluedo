@@ -15,7 +15,7 @@ CardLocation = AgentIndex | CaseFile | ExtraCards
 
 class BooleanStatement(abc.ABC):
     @abc.abstractmethod
-    def __str__(self) -> str:
+    def to_string(self, player_names: list[str]) -> str:
         raise NotImplementedError
 
     @abc.abstractmethod
@@ -36,8 +36,8 @@ class CardIsInLocation(BooleanStatement):
     rumor_card: RumorCard
     location: CardLocation
 
-    def __str__(self) -> str:
-        return f"player {self.location} has {self.rumor_card.name} card"
+    def to_string(self, player_names: list[str]) -> str:
+        return f"{f'{player_names[self.location].capitalize()}' if isinstance(self.location, int) else self.location} has {self.rumor_card.name} card"
 
     def __hash__(self) -> int:
         return hash((self.location, self.rumor_card, type(self).__name__))
@@ -50,8 +50,8 @@ class CardIsInLocation(BooleanStatement):
 class Not(BooleanStatement):
     operand: CardIsInLocation
 
-    def __str__(self) -> str:
-        return f"¬({self.operand})"
+    def to_string(self, player_names: list[str]) -> str:
+        return f"NOT ({self.operand.to_string(player_names)})"
 
     def __hash__(self) -> int:
         return hash((self.operand, type(self).__name__))
@@ -65,7 +65,7 @@ class _Multi(BooleanStatement, abc.ABC):
     operands: Sequence[CardIsInLocation]
 
     @abc.abstractmethod
-    def __str__(self) -> str:
+    def to_string(self, player_names: list[str]) -> str:
         raise NotImplementedError
 
     def __hash__(self) -> int:
@@ -74,8 +74,8 @@ class _Multi(BooleanStatement, abc.ABC):
 
 @dataclasses.dataclass
 class And(_Multi):
-    def __str__(self) -> str:
-        return " ^ ".join([f"({e})" for e in self.operands])
+    def to_string(self, player_names: list[str]) -> str:
+        return " AND ".join([f"({e.to_string(player_names)})" for e in self.operands])
 
     def __hash__(self) -> int:
         return hash((hash(super()), type(self).__name__))
@@ -86,8 +86,8 @@ class And(_Multi):
 
 @dataclasses.dataclass
 class Or(_Multi):
-    def __str__(self) -> str:
-        return " v ".join([f"({e})" for e in self.operands])
+    def to_string(self, player_names: list[str]) -> str:
+        return " OR ".join([f"({e.to_string(player_names)})" for e in self.operands])
 
     def __hash__(self) -> int:
         return hash((hash(super()), type(self).__name__))
@@ -98,8 +98,8 @@ class Or(_Multi):
 
 @dataclasses.dataclass
 class Xor(_Multi):
-    def __str__(self) -> str:
-        return " ⨁ ".join([f"({e})" for e in self.operands])
+    def to_string(self, player_names: list[str]) -> str:
+        return " XOR ".join([f"({e.to_string(player_names)})" for e in self.operands])
 
     def __hash__(self) -> int:
         return hash((hash(super()), type(self).__name__))

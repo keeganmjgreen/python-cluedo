@@ -45,6 +45,7 @@ a {
 
 .container .gameplay-box .gameplay-messages,
 .container .gameplay-box .gameplay-probabilities {
+  max-width: 600px;
   background-color: var(--intense-background-color);
   border-radius: 10px;
   margin: 10px;
@@ -182,4 +183,11 @@ a {
 
 .text-button-selected {
   border: 1px solid var(--foreground-color);
+}
+
+.boolean-statements {
+  font-size: 10px;
+  color: #808080;
+  text-wrap: nowrap;
+  overflow: scroll;
 }

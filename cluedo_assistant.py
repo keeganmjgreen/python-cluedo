@@ -35,7 +35,7 @@ class CluedoAssistantSetup:
 
     @property
     def player_indices(self) -> list[int]:
-        return list(range(len(self.player_names)))
+        return self.agent.player_indices
 
     @property
     def n_players(self) -> int:
@@ -88,6 +88,7 @@ def run_cluedo_assistant(setup: CluedoAssistantSetup, p_heatmap: bool) -> None:
                             rumor_cards=setup.io.get_extra_cards(
                                 n_extra_cards=setup.n_extra_cards
                             ),
+                            io=setup.io,
                         )
                         solved = _try_solving_crime(
                             setup,
@@ -206,6 +207,7 @@ def collect_responses(
             turn_index=turn_index,
             other_player_index=respondent_index,
             rumor_card=rumor_card,
+            io=setup.io,
         )
         if (
             setup.game_variant is GameVariant.BOTH_SIDES_REVEAL
@@ -231,6 +233,7 @@ def collect_responses(
                         turn_index=turn_index,
                         other_player_index=nonrespondent_index,
                         rumor_card=None,
+                        io=setup.io,
                     )
             choiceset = [
                 choices for choices in choiceset if respondent_index not in choices
@@ -248,6 +251,7 @@ def collect_responses(
             turn_index=turn_index,
             other_player_index=nonrespondent_index,
             rumor_card=None,
+            io=setup.io,
         )
     if len(all_choices) > 0:
         if _try_solving_crime(
@@ -294,7 +298,7 @@ def set_up_cluedo_assistant(io: AbstractIo) -> CluedoAssistantSetup:
     if player_index is None:
         agent = SmartBotObserver(
             agent_index=-1,
-            player_indices=player_indices,
+            player_names=player_names,
         )
     else:
         player_hand = io.get_rumor_cards(
@@ -303,8 +307,12 @@ def set_up_cluedo_assistant(io: AbstractIo) -> CluedoAssistantSetup:
         )
         agent = SmartBotPlayer(
             agent_index=player_index,
-            player_indices=player_indices,
+            player_names=player_names,
             rumor_cards=player_hand,
+        )
+    if isinstance(io, MessageIo):
+        io.send_boolean_statements(
+            agent.game_log_to_boolean_statements(), player_names=player_names
         )
     if agent.n_extra_cards > 0:
         reveal_extra_cards_first = io.get_yes_or_no(
@@ -320,10 +328,8 @@ def set_up_cluedo_assistant(io: AbstractIo) -> CluedoAssistantSetup:
             ),
         )
         if reveal_extra_cards_first:
-            agent.sees_extra_cards(
-                turn_index=0,
-                rumor_cards=io.get_extra_cards(n_extra_cards=agent.n_extra_cards),
-            )
+            extra_cards = io.get_extra_cards(n_extra_cards=agent.n_extra_cards)
+            agent.sees_extra_cards(turn_index=0, rumor_cards=extra_cards, io=io)
     else:
         reveal_extra_cards_first = False
     game_variant = io.get_game_variant()

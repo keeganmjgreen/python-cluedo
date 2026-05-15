@@ -2,7 +2,7 @@
 
 import dynamic from "next/dynamic";
 import { JSX, useEffect, useRef } from "react";
-import { headingFont } from "./fonts";
+import { headingFont, monospaceFont } from "./fonts";
 import {
   ChoiceEntryForm,
   MultiChoiceEntryForm,
@@ -108,6 +108,18 @@ function messageToComponent(message: MessageType): JSX.Element {
           numSelections={message.numSelections}
           initialChoices={message.response?.values}
         />
+      </>
+    );
+  }
+  if (message.type === "boolean_statements") {
+    return (
+      <>
+        <p>Solver knowledge added:</p>
+        <div className={`boolean-statements ${monospaceFont.className}`}>
+          {message.booleanStatements.map((statement, index) => (
+            <div key={index}>{statement}</div>
+          ))}
+        </div>
       </>
     );
   }

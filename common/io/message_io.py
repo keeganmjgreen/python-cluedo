@@ -17,7 +17,7 @@ from common.cards import (
 )
 from common.consts import GameVariant
 from common.io.io import AbstractIo
-from common.maths import CardIsInLocation
+from common.maths import BooleanStatement, CardIsInLocation
 
 T = TypeVar("T", bound=(Character | Weapon | Room))
 
@@ -86,12 +86,18 @@ class _MultiChoiceEntryResponse(_BaseGameHistoryItem):
     values: list[str]
 
 
+class _BooleanStatements(_BaseMessage):
+    type: Literal["boolean_statements"] = "boolean_statements"
+    boolean_statements: list[str]
+
+
 Message = (
     _PlainMessage
     | _PlayerNamesEntryRequest
     | _Banner
     | _ChoiceEntryRequest
     | _MultiChoiceEntryRequest
+    | _BooleanStatements
 )
 GameHistoryItem = (
     _PlayerNamesEntryResponse | _ChoiceEntryResponse | _MultiChoiceEntryResponse
@@ -244,6 +250,16 @@ class MessageIo(AbstractIo):
         if prefix is not None:
             msg = f"{prefix}: {msg}"
         self._send(_PlainMessage(text=msg))
+
+    def send_boolean_statements(
+        self, boolean_statements: list[BooleanStatement], player_names: list[str]
+    ) -> None:
+        message = _BooleanStatements(
+            boolean_statements=sorted(
+                s.to_string(player_names) for s in boolean_statements
+            )
+        )
+        self._send(message)
 
     def _send(self, message: Message) -> None:
         self.messages.append(message)

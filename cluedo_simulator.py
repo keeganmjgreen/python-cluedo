@@ -190,17 +190,16 @@ def set_up_game(
     agent_types = list(player_types) + list(observer_types)
     agents: dict[AgentIndex, BaseAgent] = {}
     for agent_index, agent_type in enumerate(agent_types):
-        player_indices = list(range(n_players))
         if issubclass(agent_type, BasePlayer):
             agent = agent_type(
                 agent_index=agent_index,
-                player_indices=player_indices,
+                player_names=player_names,
                 rumor_cards=[rumor_deck.pop() for _ in range(n_cards_per_player)],
             )
         else:
             agent = agent_type(
                 agent_index=agent_index,
-                player_indices=player_indices,
+                player_names=player_names,
             )
         agents[agent_index] = agent
     game_setup = GameSetup(

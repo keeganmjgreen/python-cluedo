@@ -50,12 +50,18 @@ const MultiChoiceEntryRequest = z.object({
   response: z.nullable(MultiChoiceEntryResponse),
 });
 
+const BooleanStatements = z.object({
+  type: z.literal("boolean_statements"),
+  booleanStatements: z.array(z.string()),
+});
+
 const Message = z.union([
   PlainMessage,
   PlayerNamesEntryRequest,
   Banner,
   ChoiceEntryRequest,
   MultiChoiceEntryRequest,
+  BooleanStatements,
 ]);
 export type MessageType = z.infer<typeof Message>;
 

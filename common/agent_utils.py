@@ -6,6 +6,7 @@ from typing import Literal
 
 from common.cards import RUMORS, Crime, RumorCard
 from common.consts import EXTRA_CARDS, ExtraCards
+from common.io.io import AbstractIo
 
 CASE_FILE = "Case File"
 
@@ -38,9 +39,13 @@ class GameLogEntry:
 @dataclasses.dataclass
 class BaseAgent(abc.ABC):
     agent_index: AgentIndex
-    player_indices: list[AgentIndex]
+    player_names: list[str]
 
     game_log: list[GameLogEntry] = dataclasses.field(init=False)
+
+    @property
+    def player_indices(self) -> list[int]:
+        return list(range(len(self.player_names)))
 
     def __post_init__(self) -> None:
         self.game_log = [GameLogEntry(turn_index=0)]
@@ -56,19 +61,21 @@ class BaseAgent(abc.ABC):
         turn_index: int,
         other_player_index: AgentIndex | ExtraCards,
         rumor_card: RumorCard | UnknownRumor | None,
+        io: AbstractIo | None,
     ) -> None:
         self.game_log[turn_index].card_reveals.append(
             CardReveal(other_player_index, rumor_card)
         )
 
     def sees_extra_cards(
-        self, turn_index: int, rumor_cards: Sequence[RumorCard]
+        self, turn_index: int, rumor_cards: Sequence[RumorCard], io: AbstractIo | None
     ) -> None:
         for rumor_card in rumor_cards:
             self.sees_card(
                 turn_index=turn_index,
                 other_player_index=EXTRA_CARDS,
                 rumor_card=rumor_card,
+                io=io,
             )
 
     @abc.abstractmethod
