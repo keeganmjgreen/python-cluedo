@@ -19,7 +19,12 @@ export function ClientGameplayBox(props: { gameData: GameDataType }) {
 
   // Auto-scroll to bottom / last message:
   useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+    if (
+      props.gameData.messages[props.gameData.messages.length - 1].type !==
+      "player_names_entry_request"
+    ) {
+      messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+    }
   }, [props.gameData.messages]);
 
   const plot: JSX.Element = props.gameData.latestProbabilitiesData ? (
