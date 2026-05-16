@@ -29,9 +29,15 @@ export function ClientGameplayBox(props: { gameData: GameDataType }) {
           z: props.gameData.latestProbabilitiesData.matrix,
           x: props.gameData.latestProbabilitiesData.cols,
           y: props.gameData.latestProbabilitiesData.rows,
+          hovertemplate:
+            "~%{z:.0%} chance that the %{x} card is in %{y}<extra></extra>",
           type: "heatmap",
           zmin: 0,
           zmax: 1,
+          colorbar: {
+            nticks: 2,
+            tickformat: ".0%",
+          },
         },
       ]}
       layout={{
@@ -49,6 +55,7 @@ export function ClientGameplayBox(props: { gameData: GameDataType }) {
         plot_bgcolor: "rgba(0,0,0,0)",
         paper_bgcolor: "rgba(0,0,0,0)",
       }}
+      config={{ displayModeBar: false, showAxisDragHandles: false }}
       style={{ width: "100%", height: "100%" }}
     />
   ) : (

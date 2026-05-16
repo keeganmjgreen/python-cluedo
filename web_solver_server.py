@@ -44,7 +44,7 @@ async def get_game_data(game_history: list[GameHistoryItem]) -> GameData:
             matrix[row][col] = probability
         latest_probabilities_data = ProbabilitiesData(
             matrix=[list(ol.values()) for ol in matrix.values()],
-            cols=[col.name.capitalize() for col in next(iter(matrix.values())).keys()],
+            cols=[col.name.title() for col in next(iter(matrix.values())).keys()],
             rows=[
                 f"{setup.player_names[row].capitalize()}'s hand"
                 if isinstance(row, int)

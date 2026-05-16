@@ -37,7 +37,12 @@ class CardIsInLocation(BooleanStatement):
     location: CardLocation
 
     def to_string(self, player_names: list[str]) -> str:
-        return f"{f'{player_names[self.location].capitalize()}' if isinstance(self.location, int) else self.location} has {self.rumor_card.name} card"
+        location = (
+            f"{player_names[self.location].capitalize()}'s hand"
+            if isinstance(self.location, int)
+            else self.location
+        )
+        return f"{self.rumor_card.name.title()} card is in {location}"
 
     def __hash__(self) -> int:
         return hash((self.location, self.rumor_card, type(self).__name__))
