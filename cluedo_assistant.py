@@ -314,7 +314,7 @@ def set_up_cluedo_assistant(io: AbstractIo) -> CluedoAssistantSetup:
         io.send_boolean_statements(
             agent.game_log_to_boolean_statements(), player_names=player_names
         )
-    if agent.n_extra_cards > 0:
+    if not isinstance(agent, BasePlayer) and agent.n_extra_cards > 0:
         reveal_extra_cards_first = io.get_yes_or_no(
             prompt=(
                 "Based on the number of players, there must be extra cards that "
