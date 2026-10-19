@@ -1,6 +1,10 @@
 from fastapi import FastAPI
 
-from cluedo_assistant import run_cluedo_assistant, set_up_cluedo_assistant
+from cluedo_assistant import (
+    N_SAMPLES_FOR_PROBABILITY,
+    run_cluedo_assistant,
+    set_up_cluedo_assistant,
+)
 from common.cards import RumorCard
 from common.io.message_io import (
     BaseModel,
@@ -31,9 +35,13 @@ async def get_game_data(game_history: list[GameHistoryItem]) -> GameData:
     setup = None
     try:
         setup = set_up_cluedo_assistant(io=message_io)
-        run_cluedo_assistant(setup, p_heatmap=True)
+        run_cluedo_assistant(setup)
     except GameHistoryExhaustedError:
-        pass
+        if setup:
+            probabilities = setup.agent.solve_truths_cnf_probabilities(
+                n_samples=N_SAMPLES_FOR_PROBABILITY
+            )
+            message_io.latest_probabilities = probabilities
     if setup is not None and message_io.latest_probabilities is not None:
         matrix: dict[CardLocation, dict[RumorCard, float]] = {}
         for card_loc, probability in message_io.latest_probabilities.items():

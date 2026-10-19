@@ -46,26 +46,23 @@ class CluedoAssistantSetup:
         return self.agent.n_extra_cards
 
 
-def run_cluedo_assistant(setup: CluedoAssistantSetup, p_heatmap: bool) -> None:
+def run_cluedo_assistant(setup: CluedoAssistantSetup, p_heatmap: bool = False) -> None:
     turn_index = 0
     try:
         while True:
             for player_name in setup.player_names:
-                if p_heatmap:
+                if p_heatmap and isinstance(setup.io, TextIo):
+                    from common import store
+
                     probabilities = setup.agent.solve_truths_cnf_probabilities(
                         n_samples=N_SAMPLES_FOR_PROBABILITY
                     )
-                    if isinstance(setup.io, TextIo):
-                        from common import store
-
-                        store.append_probabilities(
-                            str(setup.agent),
-                            turn_index,
-                            probabilities,
-                            player_names=setup.player_names,
-                        )
-                    elif isinstance(setup.io, MessageIo):
-                        setup.io.latest_probabilities = probabilities
+                    store.append_probabilities(
+                        str(setup.agent),
+                        turn_index,
+                        probabilities,
+                        player_names=setup.player_names,
+                    )
                 turn_index += 1
                 if _run_turn(setup, turn_index, current_player_name=player_name):
                     return
