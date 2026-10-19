@@ -65,7 +65,7 @@ export function ClientGameplayBox(props: { gameData: GameDataType }) {
     />
   ) : (
     <div className={headingFont.className}>
-      Approximate probabilities will display here once the game has begun.
+      Approximate probabilities will display here when available.
     </div>
   );
 
