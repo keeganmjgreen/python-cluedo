@@ -90,9 +90,7 @@ def run_cluedo_assistant(setup: CluedoAssistantSetup, p_heatmap: bool) -> None:
                             ),
                             io=setup.io,
                         )
-                        solved = _try_solving_crime(
-                            setup,
-                        )
+                        solved = _try_solving_crime(setup)
                         if not solved:
                             setup.io.print_("An unexpected error occurred.")
                         return
